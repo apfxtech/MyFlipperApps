@@ -29,7 +29,8 @@ typedef struct {
     volatile uint8_t input_state;
     volatile bool exit_requested;
     volatile bool back_long_requested;
-    volatile bool back_long_latched;
+    volatile bool back_long_suppressed;
+    volatile uint32_t input_cb_inflight;
 } FlipperState;
 
 extern void setup();
@@ -38,6 +39,13 @@ extern bool microtd_handle_back_long();
 extern Arduboy2 arduboy;
 
 static FlipperState* g_state = NULL;
+
+static void wait_input_callbacks_idle(FlipperState* state) {
+    if(!state) return;
+    while(__atomic_load_n((uint32_t*)&state->input_cb_inflight, __ATOMIC_ACQUIRE) != 0) {
+        furi_delay_ms(1);
+    }
+}
 
 static void framebuffer_commit_callback(
     uint8_t* data,
@@ -61,24 +69,31 @@ static void input_events_callback(const void* value, void* ctx) {
 
     FlipperState* state = (FlipperState*)ctx;
     const InputEvent* event = (const InputEvent*)value;
+    Arduboy2Base::InputContext* input_ctx = arduboy.inputContext();
+
+    (void)__atomic_fetch_add((uint32_t*)&state->input_cb_inflight, 1, __ATOMIC_RELAXED);
 
     if(event->key == InputKeyBack) {
-        if(event->type == InputTypeLong) {
-            if(!state->back_long_latched) {
-                state->back_long_requested = true;
-                state->back_long_latched = true;
-                (void)__atomic_fetch_and(
-                    (uint8_t*)&state->input_state, (uint8_t)~INPUT_B, __ATOMIC_RELAXED);
+        if(state->back_long_suppressed) {
+            if(event->type == InputTypeRelease) {
+                state->back_long_suppressed = false;
             }
-            return;
+            arduboy.clearInputMask(INPUT_B);
+            goto exit_callback;
         }
 
-        if(event->type == InputTypeRelease) {
-            state->back_long_latched = false;
+        if(event->type == InputTypeLong) {
+            state->back_long_requested = true;
+            state->back_long_suppressed = true;
+            arduboy.clearInputMask(INPUT_B);
+            goto exit_callback;
         }
     }
 
-    Arduboy2Base::FlipperInputCallback(event, arduboy.inputContext());
+    Arduboy2Base::FlipperInputCallback(event, input_ctx);
+
+exit_callback:
+    (void)__atomic_fetch_sub((uint32_t*)&state->input_cb_inflight, 1, __ATOMIC_RELAXED);
 }
 
 extern "C" int32_t arduboy_app(void* p) {
@@ -98,7 +113,8 @@ extern "C" int32_t arduboy_app(void* p) {
 
         g_state->exit_requested = false;
         g_state->back_long_requested = false;
-        g_state->back_long_latched = false;
+        g_state->back_long_suppressed = false;
+        g_state->input_cb_inflight = 0;
         g_state->input_state = 0;
         memset(g_state->screen_buffer, 0x00, BUFFER_SIZE);
         memset(g_state->front_buffer, 0x00, BUFFER_SIZE);
@@ -144,9 +160,7 @@ extern "C" int32_t arduboy_app(void* p) {
                 if(g_state->back_long_requested) {
                     g_state->back_long_requested = false;
                     const bool should_exit = microtd_handle_back_long();
-
-                    __atomic_store_n((uint8_t*)&g_state->input_state, 0, __ATOMIC_RELAXED);
-                    arduboy.clearButtonState();
+                    arduboy.resetInputState();
 
                     if(should_exit) {
                         g_state->exit_requested = true;
@@ -184,6 +198,8 @@ extern "C" int32_t arduboy_app(void* p) {
         furi_pubsub_unsubscribe(g_state->input_events, g_state->input_sub);
         g_state->input_sub = NULL;
     }
+
+    wait_input_callbacks_idle(g_state);
 
     if(g_state->input_events) {
         furi_record_close(RECORD_INPUT_EVENTS);
