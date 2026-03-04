@@ -61,7 +61,6 @@ bool HasHighTraffic(int x, int y)
 uint8_t CalculateBuildingTile(Building* building, uint8_t x, uint8_t y)
 {
 	const BuildingInfo* info = GetBuildingInfo(building->type);
-	uint8_t width = pgm_read_byte(&info->width);
 	uint8_t height = pgm_read_byte(&info->height);
 	uint8_t tile = pgm_read_byte(&info->drawTile);
 
@@ -128,7 +127,6 @@ uint8_t CalculateTile(int x, int y)
 			const BuildingInfo* info = GetBuildingInfo(building->type);
 			uint8_t width = pgm_read_byte(&info->width);
 			uint8_t height = pgm_read_byte(&info->height);
-			uint8_t tile = pgm_read_byte(&info->drawTile);
 			if (x < building->x + width && y < building->y + height)
 			{
 				return CalculateBuildingTile(building, x - building->x, y - building->y);
@@ -850,4 +848,3 @@ void Draw()
 	AnimationFrame++;
 
 }
-

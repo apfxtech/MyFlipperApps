@@ -1,6 +1,6 @@
 #pragma once
 
-#if _WIN32
+#if defined(_WIN32)
 #include <stdint.h>
 #include <string.h>
 #define PROGMEM
@@ -10,7 +10,7 @@
 #define pgm_read_ptr(x) (*((uintptr_t*)x))
 #define strlen_P(x) strlen(x)
 #else
-#include <avr/pgmspace.h>
+#include <lib/pgmspace.h>
 //#define pgm_read_ptr pgm_read_word
 #endif
 

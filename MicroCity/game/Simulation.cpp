@@ -15,7 +15,7 @@ enum SimulationSteps
 #ifdef _WIN32
 void DebugBuildingScore(Building* building, int score, int crime, int pollution, int localInfluence, int populationEffect, int randomEffect);
 #else
-inline void DebugBuildingScore(Building* building, int score, int crime, int pollution, int localInfluence, int populationEffect, int randomEffect) {}
+inline void DebugBuildingScore(Building*, int, int, int, int, int, int) {}
 #endif
 
 #define SIM_INCREMENT_POP_THRESHOLD 20				// Score must be more than this to grow
@@ -412,7 +412,7 @@ void SimulateBuilding(Building* building)
 				if (pollution > SIM_MAX_POLLUTION)
 					pollution = SIM_MAX_POLLUTION;
 				score -= pollution * SIM_POLLUTION_INFLUENCE;
-#if _WIN32
+#if defined(_WIN32)
 //				printf("Pollution: %d\n", pollution * SIM_POLLUTION_INFLUENCE);
 #endif
 			}

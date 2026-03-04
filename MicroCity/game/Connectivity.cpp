@@ -3,7 +3,6 @@
 #include "Building.h"
 
 void PowerFloodFill(uint8_t x, uint8_t y);
-uint8_t* GetPowerGrid();
 
 uint8_t GetConnections(int x, int y)
 {

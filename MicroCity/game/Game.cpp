@@ -27,7 +27,7 @@ uint16_t GetRand()
 void InitGame()
 {
 	uint8_t* ptr = (uint8_t*)(&State);
-	for (int n = 0; n < sizeof(GameState); n++)
+	for (size_t n = 0; n < sizeof(GameState); n++)
 	{
 		*ptr = 0;
 		ptr++;
@@ -72,4 +72,3 @@ void TickGame()
 
 	Draw();
 }
-
