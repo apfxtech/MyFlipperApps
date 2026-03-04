@@ -4,3 +4,6 @@
 [submodule "TowerDefense/lib"]
 	path = TowerDefense/lib
 	url = https://github.com/apfxtech/arduboylib.git
+[submodule "CatacombsOfTheDamned/lib"]
+	path = CatacombsOfTheDamned/lib
+	url = https://github.com/apfxtech/arduboylib.git
