@@ -1,0 +1,3 @@
+[submodule "TowerDefense/lib"]
+	path = TowerDefense/lib
+	url = https://github.com/apfxtech/arduboylib.git
