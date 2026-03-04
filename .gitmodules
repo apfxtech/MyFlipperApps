@@ -1,0 +1,3 @@
+[submodule "MicroCity/lib"]
+	path = MicroCity/lib
+	url = https://github.com/apfxtech/arduboylib.git
