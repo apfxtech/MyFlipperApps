@@ -2233,8 +2233,6 @@ Game game;
 
 // ========= Arduboy code only ==========
 
-Arduboy2 arduboy;
-
 bool microtd_handle_back_long()
 {
   if (game.mState == STATE_MENU)
@@ -2709,7 +2707,7 @@ inline void checkButton(uint8_t button, bool checkRepeat=false)
     {
       if (buttonRepeatCounter == 0)
       {
-        if (arduboy.frameCount % BUTTON_REPEAT_PERIOD == 0)
+        if (arduboy.frameCount() % BUTTON_REPEAT_PERIOD == 0)
           game.buttonDown(button);
       }
       else
@@ -2739,7 +2737,7 @@ bool recordWritten = false; ///< For detecting records and writing to EEPROM.
 
 void setup()
 {
-  arduboy.begin();
+  EEPROM.begin();
   game.mSound = arduboy.audio.enabled();
 
   beep1.begin();
@@ -2761,7 +2759,7 @@ void setup()
     // load the records from EEPROM
 
     for (uint8_t i = 0; i < MAPS_TOTAL; ++i)
-      game.mRecords[i] = EEPROM[EEPROM_START + i + 1];
+      game.mRecords[i] = EEPROM.read(EEPROM_START + i + 1);
   }
 }
 
