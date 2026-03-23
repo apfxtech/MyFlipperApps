@@ -107,3 +107,21 @@ Survival shooter where you save survivors in a town overrun by a zombie virus ou
 ### Original (Arduboy)
 **Team A.R.G. Museum**
 [ID-40-VIRUS-LQP-79](https://github.com/Team-ARG-Museum/ID-40-VIRUS-LQP-79)
+
+## CastleBoy
+Castlevania-like platformer with challenging gameplay and retro visuals for Flipper Zero.
+
+<table>
+<tr>
+<td><img src="CastleBoy/package/screenshots/1.png" width="150"></td>
+<td><img src="CastleBoy/package/screenshots/2.png" width="150"></td>
+</tr>
+<tr>
+<td><img src="CastleBoy/package/screenshots/3.png" width="150"></td>
+<td><img src="CastleBoy/package/screenshots/4.png" width="150"></td>
+</tr>
+</table>
+
+### Original (Arduboy)
+**jlauener and Increment**
+[CastleBoy](https://github.com/jlauener/CastleBoy)
