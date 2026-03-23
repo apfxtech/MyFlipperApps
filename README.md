@@ -89,3 +89,22 @@ Arcade racing game focused on speed, traffic dodging, and sprite-scaled road act
 ### Original (Arduboy)
 **rveilleux**
 [ard-drivin](https://github.com/rveilleux/ard-drivin)
+
+## CastleBoy
+Castlevania-like platformer with challenging gameplay and retro visuals for Flipper Zero.
+
+<table>
+<tr>
+<td><img src="CastleBoy/package/screenshots/1.png" width="150"></td>
+<td><img src="CastleBoy/package/screenshots/2.png" width="150"></td>
+</tr>
+<tr>
+<td><img src="CastleBoy/package/screenshots/3.png" width="150"></td>
+<td><img src="CastleBoy/package/screenshots/4.png" width="150"></td>
+</tr>
+</table>
+
+### Original (Arduboy)
+**jlauener and Increment**
+[CastleBoy](https://github.com/jlauener/CastleBoy)
+
