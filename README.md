@@ -95,12 +95,12 @@ Survival shooter where you save survivors in a town overrun by a zombie virus ou
 
 <table>
 <tr>
-<td><img src="VirusLQP79/package/screenshots/1.png" width="150"></td>
-<td><img src="VirusLQP79/package/screenshots/2.png" width="150"></td>
+<td><img src="VirusLQP79/package/screenshots/screen1.png" width="150"></td>
+<td><img src="VirusLQP79/package/screenshots/screen2.png" width="150"></td>
 </tr>
 <tr>
-<td><img src="VirusLQP79/package/screenshots/3.png" width="150"></td>
-<td><img src="VirusLQP79/package/screenshots/4.png" width="150"></td>
+<td><img src="VirusLQP79/package/screenshots/screen3.png" width="150"></td>
+<td><img src="VirusLQP79/package/screenshots/screen4.png" width="150"></td>
 </tr>
 </table>
 
@@ -113,15 +113,73 @@ Castlevania-like platformer with challenging gameplay and retro visuals for Flip
 
 <table>
 <tr>
-<td><img src="CastleBoy/package/screenshots/1.png" width="150"></td>
-<td><img src="CastleBoy/package/screenshots/2.png" width="150"></td>
+<td><img src="CastleBoy/package/screenshots/screen1.png" width="150"></td>
+<td><img src="CastleBoy/package/screenshots/screen2.png" width="150"></td>
 </tr>
 <tr>
-<td><img src="CastleBoy/package/screenshots/3.png" width="150"></td>
-<td><img src="CastleBoy/package/screenshots/4.png" width="150"></td>
+<td><img src="CastleBoy/package/screenshots/screen3.png" width="150"></td>
+<td><img src="CastleBoy/package/screenshots/screen4.png" width="150"></td>
 </tr>
 </table>
 
 ### Original (Arduboy)
 **jlauener and Increment**
 [CastleBoy](https://github.com/jlauener/CastleBoy)
+
+## PrinceOfArabia
+Cinematic platform adventure with traps, sword fights, and palace escape gameplay.
+
+<table>
+<tr>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperPrinceOfArabia/main/package/screenshots/1.png" width="150"></td>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperPrinceOfArabia/main/package/screenshots/2.png" width="150"></td>
+</tr>
+<tr>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperPrinceOfArabia/main/package/screenshots/3.png" width="150"></td>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperPrinceOfArabia/main/package/screenshots/4.png" width="150"></td>
+</tr>
+</table>
+
+### Flipper Zero Port
+[FlipperPrinceOfArabia](https://github.com/apfxtech/FlipperPrinceOfArabia)
+
+### Original (Arduboy)
+**Press Play on Tape**
+[Prince of Arabia](https://github.com/filmote/PrinceOfArabia)
+
+## Wolfenduino
+First-person action shooter inspired by Wolfenstein 3D with maze levels, enemies, and weapons.
+
+<table>
+<tr>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperWolfenduino/main/package/screenshots/screen1.png" width="150"></td>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperWolfenduino/main/package/screenshots/screen2.png" width="150"></td>
+</tr>
+<tr>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperWolfenduino/main/package/screenshots/screen3.png" width="150"></td>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperWolfenduino/main/package/screenshots/screen4.png" width="150"></td>
+</tr>
+</table>
+
+### Flipper Zero Port
+[FlipperWolfenduino](https://github.com/apfxtech/FlipperWolfenduino)
+
+### Original (Arduboy)
+**James Howard**
+[Wolfenduino](https://github.com/jhhoward/WolfenduinoFX)
+
+## Ardens
+Arduboy simulator and debugging tool for running, profiling, and testing Arduboy applications.
+
+<table>
+<tr>
+<td><img src="https://raw.githubusercontent.com/tiberiusbrown/ardens/master/screenshot.png" width="320"></td>
+</tr>
+</table>
+
+### Flipper Zero Port
+[FlipperArdens](https://github.com/apfxtech/FlipperArdens)
+
+### Original
+**Tiberius Brown**
+[Ardens](https://github.com/tiberiusbrown/ardens)
