@@ -89,3 +89,21 @@ Arcade racing game focused on speed, traffic dodging, and sprite-scaled road act
 ### Original (Arduboy)
 **rveilleux**
 [ard-drivin](https://github.com/rveilleux/ard-drivin)
+
+## VIRUS LQP-79
+Survival shooter where you save survivors in a town overrun by a zombie virus outbreak.
+
+<table>
+<tr>
+<td><img src="VirusLQP79/package/screenshots/1.png" width="150"></td>
+<td><img src="VirusLQP79/package/screenshots/2.png" width="150"></td>
+</tr>
+<tr>
+<td><img src="VirusLQP79/package/screenshots/3.png" width="150"></td>
+<td><img src="VirusLQP79/package/screenshots/4.png" width="150"></td>
+</tr>
+</table>
+
+### Original (Arduboy)
+**Team A.R.G. Museum**
+[ID-40-VIRUS-LQP-79](https://github.com/Team-ARG-Museum/ID-40-VIRUS-LQP-79)
