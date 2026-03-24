@@ -126,6 +126,24 @@ Castlevania-like platformer with challenging gameplay and retro visuals for Flip
 **jlauener and Increment**
 [CastleBoy](https://github.com/jlauener/CastleBoy)
 
+## MysticBalloon
+Atmospheric platformer where you float through hazard-filled levels using balloons, collect coins, and reach the exit across 39 handcrafted stages.
+
+<table>
+<tr>
+<td><img src="MysticBalloon/package/screenshots/1.png" width="150"></td>
+<td><img src="MysticBalloon/package/screenshots/2.png" width="150"></td>
+</tr>
+<tr>
+<td><img src="MysticBalloon/package/screenshots/3.png" width="150"></td>
+<td><img src="MysticBalloon/package/screenshots/4.png" width="150"></td>
+</tr>
+</table>
+
+### Original (Arduboy)
+**TEAM a.r.g.**
+[ID-34-Mystic-Balloon](https://github.com/Team-ARG-Museum/ID-34-Mystic-Balloon)
+
 ## PrinceOfArabia
 Cinematic platform adventure with traps, sword fights, and palace escape gameplay.
 
