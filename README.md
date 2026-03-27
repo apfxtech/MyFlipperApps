@@ -5,12 +5,12 @@ Compact tower defense with upgradeable towers, multiple maps, and wave-based sur
 
 <table>
 <tr>
-<td><img src="TowerDefense/package/screenshots/1.png" width="150"></td>
-<td><img src="TowerDefense/package/screenshots/2.png" width="150"></td>
+<td><img src="apps/games/microtd/package/screenshots/1.png" width="150"></td>
+<td><img src="apps/games/microtd/package/screenshots/2.png" width="150"></td>
 </tr>
 <tr>
-<td><img src="TowerDefense/package/screenshots/3.png" width="150"></td>
-<td><img src="TowerDefense/package/screenshots/4.png" width="150"></td>
+<td><img src="apps/games/microtd/package/screenshots/3.png" width="150"></td>
+<td><img src="apps/games/microtd/package/screenshots/4.png" width="150"></td>
 </tr>
 </table>
 
@@ -23,12 +23,12 @@ City-building sandbox with zoning, utilities, disasters, and budget management.
 
 <table>
 <tr>
-<td><img src="MicroCity/package/screenshots/1.png" width="150"></td>
-<td><img src="MicroCity/package/screenshots/2.png" width="150"></td>
+<td><img src="apps/games/microcity/package/screenshots/1.png" width="150"></td>
+<td><img src="apps/games/microcity/package/screenshots/2.png" width="150"></td>
 </tr>
 <tr>
-<td><img src="MicroCity/package/screenshots/3.png" width="150"></td>
-<td><img src="MicroCity/package/screenshots/4.png" width="150"></td>
+<td><img src="apps/games/microcity/package/screenshots/3.png" width="150"></td>
+<td><img src="apps/games/microcity/package/screenshots/4.png" width="150"></td>
 </tr>
 </table>
 
@@ -41,12 +41,12 @@ Top-down action RPG with exploration, battles, equipment, and a large overworld.
 
 <table>
 <tr>
-<td><img src="Arduventure/package/screenshots/screen1.png" width="150"></td>
-<td><img src="Arduventure/package/screenshots/screen2.png" width="150"></td>
+<td><img src="apps/games/arduventure/package/screenshots/screen1.png" width="150"></td>
+<td><img src="apps/games/arduventure/package/screenshots/screen2.png" width="150"></td>
 </tr>
 <tr>
-<td><img src="Arduventure/package/screenshots/screen3.png" width="150"></td>
-<td><img src="Arduventure/package/screenshots/screen4.png" width="150"></td>
+<td><img src="apps/games/arduventure/package/screenshots/screen3.png" width="150"></td>
+<td><img src="apps/games/arduventure/package/screenshots/screen4.png" width="150"></td>
 </tr>
 </table>
 
@@ -59,12 +59,12 @@ Fast dungeon crawler with procedural levels, fireball combat, and treasure hunti
 
 <table>
 <tr>
-<td><img src="CatacombsOfTheDamned/package/screenshots/screen1.png" width="150"></td>
-<td><img src="CatacombsOfTheDamned/package/screenshots/screen2.png" width="150"></td>
+<td><img src="apps/games/catacombs/package/screenshots/screen1.png" width="150"></td>
+<td><img src="apps/games/catacombs/package/screenshots/screen2.png" width="150"></td>
 </tr>
 <tr>
-<td><img src="CatacombsOfTheDamned/package/screenshots/screen3.png" width="150"></td>
-<td><img src="CatacombsOfTheDamned/package/screenshots/screen4.png" width="150"></td>
+<td><img src="apps/games/catacombs/package/screenshots/screen3.png" width="150"></td>
+<td><img src="apps/games/catacombs/package/screenshots/screen4.png" width="150"></td>
 </tr>
 </table>
 
@@ -77,12 +77,12 @@ Arcade racing game focused on speed, traffic dodging, and sprite-scaled road act
 
 <table>
 <tr>
-<td><img src="Drivin/package/screenshots/1.png" width="150"></td>
-<td><img src="Drivin/package/screenshots/2.png" width="150"></td>
+<td><img src="apps/games/arddrivin/package/screenshots/1.png" width="150"></td>
+<td><img src="apps/games/arddrivin/package/screenshots/2.png" width="150"></td>
 </tr>
 <tr>
-<td><img src="Drivin/package/screenshots/3.png" width="150"></td>
-<td><img src="Drivin/package/screenshots/4.png" width="150"></td>
+<td><img src="apps/games/arddrivin/package/screenshots/3.png" width="150"></td>
+<td><img src="apps/games/arddrivin/package/screenshots/4.png" width="150"></td>
 </tr>
 </table>
 
@@ -95,12 +95,12 @@ Survival shooter where you save survivors in a town overrun by a zombie virus ou
 
 <table>
 <tr>
-<td><img src="VirusLQP79/package/screenshots/screen1.png" width="150"></td>
-<td><img src="VirusLQP79/package/screenshots/screen2.png" width="150"></td>
+<td><img src="apps/games/virus_lqp79/package/screenshots/screen1.png" width="150"></td>
+<td><img src="apps/games/virus_lqp79/package/screenshots/screen2.png" width="150"></td>
 </tr>
 <tr>
-<td><img src="VirusLQP79/package/screenshots/screen3.png" width="150"></td>
-<td><img src="VirusLQP79/package/screenshots/screen4.png" width="150"></td>
+<td><img src="apps/games/virus_lqp79/package/screenshots/screen3.png" width="150"></td>
+<td><img src="apps/games/virus_lqp79/package/screenshots/screen4.png" width="150"></td>
 </tr>
 </table>
 
@@ -113,12 +113,12 @@ Castlevania-like platformer with challenging gameplay and retro visuals for Flip
 
 <table>
 <tr>
-<td><img src="CastleBoy/package/screenshots/screen1.png" width="150"></td>
-<td><img src="CastleBoy/package/screenshots/screen2.png" width="150"></td>
+<td><img src="apps/games/castleboy/package/screenshots/screen1.png" width="150"></td>
+<td><img src="apps/games/castleboy/package/screenshots/screen2.png" width="150"></td>
 </tr>
 <tr>
-<td><img src="CastleBoy/package/screenshots/screen3.png" width="150"></td>
-<td><img src="CastleBoy/package/screenshots/screen4.png" width="150"></td>
+<td><img src="apps/games/castleboy/package/screenshots/screen3.png" width="150"></td>
+<td><img src="apps/games/castleboy/package/screenshots/screen4.png" width="150"></td>
 </tr>
 </table>
 
@@ -131,12 +131,12 @@ Atmospheric platformer where you float through hazard-filled levels using balloo
 
 <table>
 <tr>
-<td><img src="MysticBalloon/package/screenshots/1.png" width="150"></td>
-<td><img src="MysticBalloon/package/screenshots/2.png" width="150"></td>
+<td><img src="apps/games/myblab/package/screenshots/screen1.png" width="150"></td>
+<td><img src="apps/games/myblab/package/screenshots/screen2.png" width="150"></td>
 </tr>
 <tr>
-<td><img src="MysticBalloon/package/screenshots/3.png" width="150"></td>
-<td><img src="MysticBalloon/package/screenshots/4.png" width="150"></td>
+<td><img src="apps/games/myblab/package/screenshots/screen3.png" width="150"></td>
+<td><img src="apps/games/myblab/package/screenshots/screen4.png" width="150"></td>
 </tr>
 </table>
 
