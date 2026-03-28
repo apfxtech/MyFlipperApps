@@ -118,19 +118,31 @@ void DrawScreenFrame() {
 void DrawGameWindowMask() {
     Platform::PutPixel((uint8_t)GAME_VIEW_X, 0, COLOUR_BLACK);
     Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), 0, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 2), 0, COLOUR_BLACK);
     Platform::PutPixel((uint8_t)GAME_VIEW_X, 1, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), 1, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)GAME_VIEW_X, 2, COLOUR_BLACK);
 
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 4), 0, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 3), 0, COLOUR_BLACK);
     Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), 0, COLOUR_BLACK);
-    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 1), 0, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 3), 1, COLOUR_BLACK);
     Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), 1, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), 2, COLOUR_BLACK);
 
     Platform::PutPixel((uint8_t)GAME_VIEW_X, DISPLAY_HEIGHT - 1, COLOUR_BLACK);
     Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), DISPLAY_HEIGHT - 1, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 2), DISPLAY_HEIGHT - 1, COLOUR_BLACK);
     Platform::PutPixel((uint8_t)GAME_VIEW_X, DISPLAY_HEIGHT - 2, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), DISPLAY_HEIGHT - 2, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)GAME_VIEW_X, DISPLAY_HEIGHT - 3, COLOUR_BLACK);
 
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 4), DISPLAY_HEIGHT - 1, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 3), DISPLAY_HEIGHT - 1, COLOUR_BLACK);
     Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), DISPLAY_HEIGHT - 1, COLOUR_BLACK);
-    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 1), DISPLAY_HEIGHT - 1, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 3), DISPLAY_HEIGHT - 2, COLOUR_BLACK);
     Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), DISPLAY_HEIGHT - 2, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), DISPLAY_HEIGHT - 3, COLOUR_BLACK);
 }
 
 void DrawGameOverlayFrame() {
