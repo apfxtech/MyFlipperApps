@@ -204,7 +204,7 @@ Cinematic platform adventure with traps, sword fights, and palace escape gamepla
 **Press Play on Tape**
 [Prince of Arabia](https://github.com/filmote/PrinceOfArabia)
 
-## [WIP] Ardens
+## [WIP] [Ardens](https://github.com/apfxtech/FlipperArdens)
 Arduboy simulator Arduboy applications.
 
 <table>
@@ -230,9 +230,6 @@ Arduboy simulator Arduboy applications.
 > - Disable usb and buzzer
 >  
 > At this stage, this repository should be treated only as an experiment/proof of concept, not as a usable Arduboy emulator for Flipper Zero.
-
-## Flipper Zero Port
-[FlipperArdens](https://github.com/apfxtech/FlipperArdens)
 
 ## Original
 **Tiberius Brown**  
