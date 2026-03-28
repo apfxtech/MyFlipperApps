@@ -56,6 +56,26 @@ extern const uint16_t spiderSpriteData[];
 extern const uint8_t handSpriteData1[];
 // Generated from Images/hand2.png
 extern const uint8_t handSpriteData2[];
+// Generated from Images/aim.png
+extern const uint8_t aimSpriteData[];
+// Generated from Images/avatar.png
+extern const uint8_t avatarSpriteData[];
+// Generated from Images/background_bottom.png
+extern const uint8_t backgroundBottomSpriteData[];
+// Generated from Images/background_top.png
+extern const uint8_t backgroundTopSpriteData[];
+// Generated from Images/gun.png
+extern const uint8_t gunSpriteData[];
+// Generated from Images/skeleton.png
+extern const uint8_t skeletonAltSpriteData[];
+// Generated from Images/torch1.png
+extern const uint8_t torchSpriteLegacyData1[];
+// Generated from Images/torch2.png
+extern const uint8_t torchSpriteLegacyData2[];
+// Generated from Images/torch3.png
+extern const uint8_t torchSpriteLegacyData3[];
+// Generated from Images/urn2.png
+extern const uint8_t urn2SpriteData[];
 // Generated from Images/textures.png
 constexpr uint8_t wallTextureData_numTextures = 1;
 extern const uint16_t wallTextureData[];
