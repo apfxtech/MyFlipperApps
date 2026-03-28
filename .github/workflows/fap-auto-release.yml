@@ -42,9 +42,10 @@ jobs:
       - name: Build changelog from commits
         id: gen-changelog
         shell: bash
+        working-directory: repo
         run: |
           set -euo pipefail
-          python3 repo/.github/scripts/build_changelog.py
+          python3 .github/scripts/build_changelog.py
 
       - name: Extract firmware metadata
         id: firmware-meta
