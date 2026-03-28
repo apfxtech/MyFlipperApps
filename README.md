@@ -1,6 +1,12 @@
 # MyFlipperApps
 
-## TowerDefense
+Apps for Flipper Zero collected in one repository.
+
+This repository contains multiple applications in one place, excluding large standalone projects which are maintained separately.
+
+Includes an automated system for sourcing and building apps.
+
+## [Tower defense](apps/games/microtd)
 Compact tower defense with upgradeable towers, multiple maps, and wave-based survival.
 
 <table>
@@ -18,61 +24,7 @@ Compact tower defense with upgradeable towers, multiple maps, and wave-based sur
 **Miloslav Ciz**
 [MicroTD](https://github.com/drummyfish/microtd)
 
-## MicroCity
-City-building sandbox with zoning, utilities, disasters, and budget management.
-
-<table>
-<tr>
-<td><img src="apps/games/microcity/package/screenshots/1.png" width="150"></td>
-<td><img src="apps/games/microcity/package/screenshots/2.png" width="150"></td>
-</tr>
-<tr>
-<td><img src="apps/games/microcity/package/screenshots/3.png" width="150"></td>
-<td><img src="apps/games/microcity/package/screenshots/4.png" width="150"></td>
-</tr>
-</table>
-
-### Original (Arduboy)
-**James Howard**
-[MicroCity](https://github.com/jhhoward/MicroCity)
-
-## Arduventure
-Top-down action RPG with exploration, battles, equipment, and a large overworld.
-
-<table>
-<tr>
-<td><img src="apps/games/arduventure/package/screenshots/screen1.png" width="150"></td>
-<td><img src="apps/games/arduventure/package/screenshots/screen2.png" width="150"></td>
-</tr>
-<tr>
-<td><img src="apps/games/arduventure/package/screenshots/screen3.png" width="150"></td>
-<td><img src="apps/games/arduventure/package/screenshots/screen4.png" width="150"></td>
-</tr>
-</table>
-
-### Original (Arduboy)
-**Team A.R.G. Museum**
-[ID-46-Arduventure](https://github.com/Team-ARG-Museum/ID-46-Arduventure)
-
-## CatacombsOfTheDamned
-Fast dungeon crawler with procedural levels, fireball combat, and treasure hunting.
-
-<table>
-<tr>
-<td><img src="apps/games/catacombs/package/screenshots/screen1.png" width="150"></td>
-<td><img src="apps/games/catacombs/package/screenshots/screen2.png" width="150"></td>
-</tr>
-<tr>
-<td><img src="apps/games/catacombs/package/screenshots/screen3.png" width="150"></td>
-<td><img src="apps/games/catacombs/package/screenshots/screen4.png" width="150"></td>
-</tr>
-</table>
-
-### Original (Arduboy)
-**James Howard**
-[Arduboy3D](https://github.com/jhhoward/Arduboy3D)
-
-## Drivin
+## [Ard-drivin](apps/games/arddrivin)
 Arcade racing game focused on speed, traffic dodging, and sprite-scaled road action.
 
 <table>
@@ -90,25 +42,7 @@ Arcade racing game focused on speed, traffic dodging, and sprite-scaled road act
 **rveilleux**
 [ard-drivin](https://github.com/rveilleux/ard-drivin)
 
-## VIRUS LQP-79
-Survival shooter where you save survivors in a town overrun by a zombie virus outbreak.
-
-<table>
-<tr>
-<td><img src="apps/games/virus_lqp79/package/screenshots/screen1.png" width="150"></td>
-<td><img src="apps/games/virus_lqp79/package/screenshots/screen2.png" width="150"></td>
-</tr>
-<tr>
-<td><img src="apps/games/virus_lqp79/package/screenshots/screen3.png" width="150"></td>
-<td><img src="apps/games/virus_lqp79/package/screenshots/screen4.png" width="150"></td>
-</tr>
-</table>
-
-### Original (Arduboy)
-**Team A.R.G. Museum**
-[ID-40-VIRUS-LQP-79](https://github.com/Team-ARG-Museum/ID-40-VIRUS-LQP-79)
-
-## CastleBoy
+## [CastleBoy](apps/games/castleboy)
 Castlevania-like platformer with challenging gameplay and retro visuals for Flipper Zero.
 
 <table>
@@ -126,7 +60,43 @@ Castlevania-like platformer with challenging gameplay and retro visuals for Flip
 **jlauener and Increment**
 [CastleBoy](https://github.com/jlauener/CastleBoy)
 
-## MysticBalloon
+## [WIP] [ArduGolf](apps/games/ardugolf)
+3D minigolf game with solid ball physics. Play through 18 holes, plan your shots, bounce off walls, and use slopes to finish each course in as few strokes as possible.
+
+<table>
+<tr>
+<td><img src="apps/games/ardugolf/package/screenshots/screen1.png" width="150"></td>
+<td><img src="apps/games/ardugolf/package/screenshots/screen2.png" width="150"></td>
+</tr>
+<tr>
+<td><img src="apps/games/ardugolf/package/screenshots/screen4.png" width="150"></td>
+<td><img src="apps/games/ardugolf/package/screenshots/screen5.png" width="150"></td>
+</tr>
+</table>
+
+### Original (Arduboy)
+**tiberiusbrown**
+[ArduGolf](https://github.com/tiberiusbrown/arduboy_minigolf)
+
+## [Virus LQP-79](apps/games/virus_lqp79)
+Survival shooter where you save survivors in a town overrun by a zombie virus outbreak.
+
+<table>
+<tr>
+<td><img src="apps/games/virus_lqp79/package/screenshots/screen1.png" width="150"></td>
+<td><img src="apps/games/virus_lqp79/package/screenshots/screen2.png" width="150"></td>
+</tr>
+<tr>
+<td><img src="apps/games/virus_lqp79/package/screenshots/screen3.png" width="150"></td>
+<td><img src="apps/games/virus_lqp79/package/screenshots/screen4.png" width="150"></td>
+</tr>
+</table>
+
+### Original (Arduboy)
+**Team A.R.G. Museum**
+[ID-40-VIRUS-LQP-79](https://github.com/Team-ARG-Museum/ID-40-VIRUS-LQP-79)
+
+## [MysticBalloon](apps/games/myblab)
 Atmospheric platformer where you float through hazard-filled levels using balloons, collect coins, and reach the exit across 39 handcrafted stages.
 
 <table>
@@ -141,31 +111,64 @@ Atmospheric platformer where you float through hazard-filled levels using balloo
 </table>
 
 ### Original (Arduboy)
-**TEAM a.r.g.**
+**Team A.R.G. Museum**
 [ID-34-Mystic-Balloon](https://github.com/Team-ARG-Museum/ID-34-Mystic-Balloon)
 
-## PrinceOfArabia
-Cinematic platform adventure with traps, sword fights, and palace escape gameplay.
+## [Arduventure](apps/games/arduventure)
+Top-down action RPG with exploration, battles, equipment, and a large overworld.
 
 <table>
 <tr>
-<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperPrinceOfArabia/main/package/screenshots/1.png" width="150"></td>
-<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperPrinceOfArabia/main/package/screenshots/2.png" width="150"></td>
+<td><img src="apps/games/arduventure/package/screenshots/screen1.png" width="150"></td>
+<td><img src="apps/games/arduventure/package/screenshots/screen2.png" width="150"></td>
 </tr>
 <tr>
-<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperPrinceOfArabia/main/package/screenshots/3.png" width="150"></td>
-<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperPrinceOfArabia/main/package/screenshots/4.png" width="150"></td>
+<td><img src="apps/games/arduventure/package/screenshots/screen3.png" width="150"></td>
+<td><img src="apps/games/arduventure/package/screenshots/screen4.png" width="150"></td>
 </tr>
 </table>
 
-### Flipper Zero Port
-[FlipperPrinceOfArabia](https://github.com/apfxtech/FlipperPrinceOfArabia)
+### Original (Arduboy)
+**Team A.R.G. Museum**
+[ID-46-Arduventure](https://github.com/Team-ARG-Museum/ID-46-Arduventure)
+
+## [Catacombs of the damned!](apps/games/catacombs)
+Fast dungeon crawler with procedural levels, fireball combat, and treasure hunting.
+
+<table>
+<tr>
+<td><img src="apps/games/catacombs/package/screenshots/screen1.png" width="150"></td>
+<td><img src="apps/games/catacombs/package/screenshots/screen2.png" width="150"></td>
+</tr>
+<tr>
+<td><img src="apps/games/catacombs/package/screenshots/screen3.png" width="150"></td>
+<td><img src="apps/games/catacombs/package/screenshots/screen4.png" width="150"></td>
+</tr>
+</table>
 
 ### Original (Arduboy)
-**Press Play on Tape**
-[Prince of Arabia](https://github.com/filmote/PrinceOfArabia)
+**James Howard**
+[Arduboy3D](https://github.com/jhhoward/Arduboy3D)
 
-## Wolfenduino
+## [MicroCity](apps/games/microcity)
+City-building sandbox with zoning, utilities, disasters, and budget management.
+
+<table>
+<tr>
+<td><img src="apps/games/microcity/package/screenshots/1.png" width="150"></td>
+<td><img src="apps/games/microcity/package/screenshots/2.png" width="150"></td>
+</tr>
+<tr>
+<td><img src="apps/games/microcity/package/screenshots/3.png" width="150"></td>
+<td><img src="apps/games/microcity/package/screenshots/4.png" width="150"></td>
+</tr>
+</table>
+
+### Original (Arduboy)
+**James Howard**
+[MicroCity](https://github.com/jhhoward/MicroCity)
+
+## [Wolfenduino](https://github.com/apfxtech/FlipperWolfenduino)
 First-person action shooter inspired by Wolfenstein 3D with maze levels, enemies, and weapons.
 
 <table>
@@ -179,12 +182,27 @@ First-person action shooter inspired by Wolfenstein 3D with maze levels, enemies
 </tr>
 </table>
 
-### Flipper Zero Port
-[FlipperWolfenduino](https://github.com/apfxtech/FlipperWolfenduino)
-
 ### Original (Arduboy)
 **James Howard**
 [Wolfenduino](https://github.com/jhhoward/WolfenduinoFX)
+
+## [PrinceOfArabia](https://github.com/apfxtech/FlipperPrinceOfArabia)
+Cinematic platform adventure with traps, sword fights, and palace escape gameplay.
+
+<table>
+<tr>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperPrinceOfArabia/main/package/screenshots/1.png" width="150"></td>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperPrinceOfArabia/main/package/screenshots/2.png" width="150"></td>
+</tr>
+<tr>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperPrinceOfArabia/main/package/screenshots/3.png" width="150"></td>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperPrinceOfArabia/main/package/screenshots/4.png" width="150"></td>
+</tr>
+</table>
+
+### Original (Arduboy)
+**Press Play on Tape**
+[Prince of Arabia](https://github.com/filmote/PrinceOfArabia)
 
 ## [WIP] Ardens
 Arduboy simulator Arduboy applications.
