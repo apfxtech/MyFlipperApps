@@ -26,8 +26,15 @@ uint8_t Renderer::globalRenderFrame = 0;
 uint8_t Renderer::numBufferSlicesFilled = 0;
 QueuedDrawable Renderer::queuedDrawables[MAX_QUEUED_DRAWABLES];
 uint8_t Renderer::numQueuedDrawables = 0;
+int16_t Renderer::viewX = 0;
+int16_t Renderer::viewWidth = DISPLAY_WIDTH;
+int16_t Renderer::viewRight = DISPLAY_WIDTH;
+int16_t Renderer::viewCenterX = DISPLAY_WIDTH / 2;
+int16_t Renderer::nearPlane = DISPLAY_WIDTH * NEAR_PLANE_MULTIPLIER / 256;
 namespace {
-void DrawTiltedSprite(int16_t x, int16_t y, const uint8_t* bmp, int8_t skew) {
+constexpr uint8_t kMinWallDrawDistance = 3;
+
+void DrawTiltedSprite(int16_t x, int16_t y, const uint8_t* bmp, int8_t skew, bool invert = false) {
     if(!bmp) return;
     const uint8_t width = pgm_read_byte(&bmp[0]);
     const uint8_t height = pgm_read_byte(&bmp[1]);
@@ -43,11 +50,110 @@ void DrawTiltedSprite(int16_t x, int16_t y, const uint8_t* bmp, int8_t skew) {
             const uint8_t mask = pgm_read_byte(&data[srcIndex + 1]);
             if((mask & bit) == 0) continue;
             const uint8_t src = pgm_read_byte(&data[srcIndex]);
+            const uint8_t colour = (uint8_t)(((src & bit) != 0) ^ invert);
             Platform::PutPixel(
-                (uint8_t)(x + sx + rowOffset), (uint8_t)(y + sy), (uint8_t)((src & bit) != 0));
+                (uint8_t)(x + sx + rowOffset), (uint8_t)(y + sy), colour);
         }
     }
 }
+
+void ClearSidebar() {
+    uint8_t* screenBuffer = Platform::GetScreenBuffer();
+    if(!screenBuffer) return;
+
+    for(uint8_t page = 0; page < DISPLAY_HEIGHT / 8; page++) {
+        for(uint8_t x = 0; x < SIDEBAR_WIDTH; x++) {
+            screenBuffer[(uint16_t)page * DISPLAY_WIDTH + x] = 0x00;
+        }
+    }
+}
+
+void ClearPixelNumberArea(int16_t x, int16_t y) {
+    for(int16_t py = y; py < y + Font::glyphHeight; py++) {
+        for(int16_t px = x; px < x + Font::glyphWidth * 2 + 1; px++) {
+            Platform::PutPixel((uint8_t)px, (uint8_t)py, COLOUR_BLACK);
+        }
+    }
+}
+
+void DrawPixelGlyph(int16_t x, int16_t y, char c, uint8_t colour) {
+    const uint8_t uc = (uint8_t)c;
+    if(uc < Font::firstGlyphIndex) return;
+
+    const uint8_t* glyph = fontPageData + Font::glyphWidth * (uc - Font::firstGlyphIndex);
+    for(uint8_t col = 0; col < Font::glyphWidth; col++) {
+        const uint8_t bits = (uint8_t)~pgm_read_byte(&glyph[col]);
+        for(uint8_t row = 0; row < Font::glyphHeight; row++) {
+            if(bits & (1u << row)) {
+                Platform::PutPixel((uint8_t)(x + col), (uint8_t)(y + row), colour);
+            }
+        }
+    }
+}
+
+void DrawPixelNumber(int16_t x, int16_t y, uint8_t value, uint8_t colour) {
+    const uint8_t clamped = value > 99 ? 99 : value;
+    ClearPixelNumberArea(x, y);
+
+    if(clamped >= 10) {
+        DrawPixelGlyph(x + 1, y, (char)('0' + clamped / 10), colour);
+        DrawPixelGlyph(x + Font::glyphWidth + 1, y, (char)('0' + clamped % 10), colour);
+    } else {
+        DrawPixelGlyph(x + Font::glyphWidth + 1, y, (char)('0' + clamped), colour);
+    }
+}
+
+void DrawScreenFrame() {
+    for(int16_t x = 0; x < DISPLAY_WIDTH; x++) {
+        Platform::PutPixel((uint8_t)x, 0, COLOUR_BLACK);
+        Platform::PutPixel((uint8_t)x, DISPLAY_HEIGHT - 1, COLOUR_BLACK);
+    }
+
+    for(int16_t y = 0; y < DISPLAY_HEIGHT; y++) {
+        Platform::PutPixel(0, (uint8_t)y, COLOUR_BLACK);
+        Platform::PutPixel(DISPLAY_WIDTH - 1, (uint8_t)y, COLOUR_BLACK);
+    }
+}
+
+void DrawGameWindowMask() {
+    Platform::PutPixel((uint8_t)GAME_VIEW_X, 0, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), 0, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)GAME_VIEW_X, 1, COLOUR_BLACK);
+
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), 0, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 1), 0, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), 1, COLOUR_BLACK);
+
+    Platform::PutPixel((uint8_t)GAME_VIEW_X, DISPLAY_HEIGHT - 1, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), DISPLAY_HEIGHT - 1, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)GAME_VIEW_X, DISPLAY_HEIGHT - 2, COLOUR_BLACK);
+
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), DISPLAY_HEIGHT - 1, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 1), DISPLAY_HEIGHT - 1, COLOUR_BLACK);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), DISPLAY_HEIGHT - 2, COLOUR_BLACK);
+}
+
+void DrawGameOverlayFrame() {
+    DrawScreenFrame();
+    DrawGameWindowMask();
+}
+
+}
+
+void Renderer::SetFullScreenViewport() {
+    viewX = 0;
+    viewWidth = DISPLAY_WIDTH;
+    viewRight = DISPLAY_WIDTH;
+    viewCenterX = DISPLAY_WIDTH / 2;
+    nearPlane = DISPLAY_WIDTH * NEAR_PLANE_MULTIPLIER / 256;
+}
+
+void Renderer::SetGameViewport() {
+    viewX = GAME_VIEW_X;
+    viewRight = GAME_VIEW_RIGHT;
+    viewWidth = viewRight - viewX;
+    viewCenterX = viewX + viewWidth / 2;
+    nearPlane = viewWidth * NEAR_PLANE_MULTIPLIER / 256;
 }
 const uint8_t scaleDrawWriteMasks[] PROGMEM =
     {(1), (1 << 1), (1 << 2), (1 << 3), (1 << 4), (1 << 5), (1 << 6), (1 << 7)};
@@ -158,12 +264,15 @@ void Renderer::DrawWallSegment(
     bool shadeEdge)
 #endif
 {
-    if(x1 < 0) {
+    UNUSED(shadeEdge);
+    if(x2 < viewX || x1 >= viewRight) return;
+    if(x1 < viewX) {
+        const int16_t clipDelta = viewX - x1;
 #if WITH_TEXTURES
-        u1clip += ((int32_t)(0 - x1) * (int32_t)(u2clip - u1clip)) / (x2 - x1);
+        u1clip += ((int32_t)clipDelta * (int32_t)(u2clip - u1clip)) / (x2 - x1);
 #endif
-        w1 += ((int32_t)(0 - x1) * (int32_t)(w2 - w1)) / (x2 - x1);
-        x1 = 0;
+        w1 += ((int32_t)clipDelta * (int32_t)(w2 - w1)) / (x2 - x1);
+        x1 = viewX;
         edgeLeft = false;
     }
     int16_t dx = x2 - x1;
@@ -186,18 +295,17 @@ void Renderer::DrawWallSegment(
     }
     constexpr uint8_t edgeColour = COLOUR_BLACK;
     uint8_t segmentClipLeft = (uint8_t)x1;
-    uint8_t segmentClipRight = (x2 < DISPLAY_WIDTH) ? (uint8_t)x2 : (uint8_t)(DISPLAY_WIDTH - 1);
-    for(int x = x1; x < DISPLAY_WIDTH; x++) {
+    uint8_t segmentClipRight = (x2 < viewRight) ? (uint8_t)x2 : (uint8_t)(viewRight - 1);
+    for(int x = x1; x < viewRight; x++) {
         // NOTE: x is >= x1 and x1 is clamped to >=0 above, so x>=0 always here.
         bool drawSlice = (wBuffer[x] < w);
-        bool shadeSlice = shadeEdge && ((x & 1) == 0);
+        bool shadeSlice = false;
         // Use wider type for safe math
         int16_t horizon = (int16_t)horizonBuffer[x];
         if(drawSlice) {
             uint8_t sliceMask = 0xff;
-            if((edgeLeft && x == x1) || (edgeRight && x == x2)) {
-                sliceMask = 0x00;
-            } else if(shadeSlice) {
+            const bool isEdgeColumn = (edgeLeft && x == x1) || (edgeRight && x == x2);
+            if(shadeSlice) {
                 sliceMask = 0x55;
             }
 #if WITH_IMAGE_TEXTURES
@@ -228,6 +336,11 @@ void Renderer::DrawWallSegment(
             if(yBot > (DISPLAY_HEIGHT - 1)) yBot = (DISPLAY_HEIGHT - 1);
             if(yTop <= yBot) {
                 Platform::DrawVLine((uint8_t)x, (int16_t)yTop, (int16_t)yBot, sliceMask);
+                if(isEdgeColumn) {
+                    for(int16_t py = yTop; py <= yBot; py++) {
+                        Platform::PutPixel((uint8_t)x, (uint8_t)py, edgeColour);
+                    }
+                }
                 Platform::PutPixel((uint8_t)x, (uint8_t)yTop, edgeColour);
                 Platform::PutPixel((uint8_t)x, (uint8_t)yBot, edgeColour);
             }
@@ -267,43 +380,9 @@ void Renderer::DrawWallSegment(
     }
     if(segmentClipLeft == segmentClipRight) return;
 #if WITH_VECTOR_TEXTURES
-    if(w1 < MIN_TEXTURE_DISTANCE || w2 < MIN_TEXTURE_DISTANCE || !texture) return;
-    if(u1clip == u2clip) return;
-    const uint8_t* texPtr = texture;
-    uint8_t numLines = pgm_read_byte(texPtr++);
-    while(numLines) {
-        numLines--;
-        uint8_t u1 = pgm_read_byte(texPtr++);
-        uint8_t v1 = pgm_read_byte(texPtr++);
-        uint8_t u2 = pgm_read_byte(texPtr++);
-        uint8_t v2 = pgm_read_byte(texPtr++);
-        if(u2 < u1clip || u1 > u2clip) continue;
-        if(u1 < u1clip) {
-            if(u2 != u1) v1 = (uint8_t)(v1 + (uint8_t)((u1clip - u1) * (int16_t)(v2 - v1) / (int16_t)(u2 - u1)));
-            u1 = u1clip;
-        }
-        if(u2 > u2clip) {
-            if(u2 != u1) v2 = (uint8_t)(v2 + (uint8_t)((u2clip - u2) * (int16_t)(v1 - v2) / (int16_t)(u1 - u2)));
-            u2 = u2clip;
-        }
-        // Normalize u to 0..128 within the clipped interval
-        u1 = (uint8_t)((128u * (uint16_t)(u1 - u1clip)) / (uint16_t)(u2clip - u1clip));
-        u2 = (uint8_t)((128u * (uint16_t)(u2 - u1clip)) / (uint16_t)(u2clip - u1clip));
-        int16_t outU1 = (int16_t)((((int32_t)u1 * dx) >> 7) + x1);
-        int16_t outU2 = (int16_t)((((int32_t)u2 * dx) >> 7) + x1);
-        int16_t interpw1 = (int16_t)(((int16_t)u1 * (w2 - w1)) >> 7) + w1;
-        int16_t interpw2 = (int16_t)(((int16_t)u2 * (w2 - w1)) >> 7) + w1;
-        int16_t outV1 = (int16_t)((interpw1 * (int16_t)v1) >> 6);
-        int16_t outV2 = (int16_t)((interpw2 * (int16_t)v2) >> 6);
-        DrawWallLine(
-            outU1,
-            (int16_t)(HORIZON - interpw1 + outV1),
-            outU2,
-            (int16_t)(HORIZON - interpw2 + outV2),
-            segmentClipLeft,
-            segmentClipRight,
-            edgeColour);
-    }
+    UNUSED(texture);
+    UNUSED(u1clip);
+    UNUSED(u2clip);
 #endif
 }
 bool Renderer::isFrustrumClipped(int16_t x, int16_t y) {
@@ -321,10 +400,10 @@ void Renderer::TransformToViewSpace(int16_t x, int16_t y, int16_t& outX, int16_t
 }
 void Renderer::TransformToScreenSpace(int16_t viewX, int16_t viewZ, int16_t& outX, int16_t& outW) {
     // apply perspective projection
-    outX = (int16_t)((int32_t)viewX * NEAR_PLANE * CAMERA_SCALE / viewZ);
-    outW = (int16_t)((CELL_SIZE / 2 * NEAR_PLANE * CAMERA_SCALE) / viewZ);
+    outX = (int16_t)((int32_t)viewX * nearPlane * CAMERA_SCALE / viewZ);
+    outW = (int16_t)((CELL_SIZE / 2 * nearPlane * CAMERA_SCALE) / viewZ);
     // transform into screen space
-    outX = (int16_t)((DISPLAY_WIDTH / 2) + outX);
+    outX = (int16_t)(viewCenterX + outX);
 }
 #if WITH_IMAGE_TEXTURES
 void Renderer::DrawWall(
@@ -386,14 +465,14 @@ void Renderer::DrawWall(
         edgeRight = false;
     }
     // apply perspective projection
-    int16_t vx1 = (int16_t)((int32_t)viewX1 * NEAR_PLANE * CAMERA_SCALE / viewZ1);
-    int16_t vx2 = (int16_t)((int32_t)viewX2 * NEAR_PLANE * CAMERA_SCALE / viewZ2);
+    int16_t vx1 = (int16_t)((int32_t)viewX1 * nearPlane * CAMERA_SCALE / viewZ1);
+    int16_t vx2 = (int16_t)((int32_t)viewX2 * nearPlane * CAMERA_SCALE / viewZ2);
     // transform the end points into screen space
-    int16_t sx1 = (int16_t)((DISPLAY_WIDTH / 2) + vx1);
-    int16_t sx2 = (int16_t)((DISPLAY_WIDTH / 2) + vx2) - 1;
-    if(sx1 >= sx2 || sx2 <= 0 || sx1 >= DISPLAY_WIDTH) return;
-    int16_t w1 = (int16_t)((CELL_SIZE / 2 * NEAR_PLANE * CAMERA_SCALE) / viewZ1);
-    int16_t w2 = (int16_t)((CELL_SIZE / 2 * NEAR_PLANE * CAMERA_SCALE) / viewZ2);
+    int16_t sx1 = (int16_t)(viewCenterX + vx1);
+    int16_t sx2 = (int16_t)(viewCenterX + vx2) - 1;
+    if(sx1 >= sx2 || sx2 < viewX || sx1 >= viewRight) return;
+    int16_t w1 = (int16_t)((CELL_SIZE / 2 * nearPlane * CAMERA_SCALE) / viewZ1);
+    int16_t w2 = (int16_t)((CELL_SIZE / 2 * nearPlane * CAMERA_SCALE) / viewZ2);
 #if WITH_TEXTURES
     DrawWallSegment(texture, sx1, w1, sx2, w2, u1, u2, edgeLeft, edgeRight, shadeEdge);
 #else
@@ -428,12 +507,12 @@ void Renderer::DrawFloorLineInner(int16_t x0, int16_t y0, int16_t x1, int16_t y1
     }
     for(; x0 <= x1; x0++) {
         if(steep) {
-            if(y0 >= 0 && y0 < DISPLAY_WIDTH && x0 >= 0 && x0 < DISPLAY_HEIGHT &&
+            if(y0 >= viewX && y0 < viewRight && x0 >= 0 && x0 < DISPLAY_HEIGHT &&
                x0 > GetHorizon(y0) + wBuffer[y0] && x0 > GetHorizon(y0) + 8) {
                 Platform::PutPixel((uint8_t)y0, (uint8_t)x0 + horizonBuffer[y0] - HORIZON, color);
             }
         } else {
-            if(x0 >= 0 && x0 < DISPLAY_WIDTH && y0 >= 0 && y0 < DISPLAY_HEIGHT &&
+            if(x0 >= viewX && x0 < viewRight && y0 >= 0 && y0 < DISPLAY_HEIGHT &&
                y0 > GetHorizon(x0) + wBuffer[x0] && y0 > GetHorizon(x0) + 8) {
                 Platform::PutPixel((uint8_t)x0, (uint8_t)y0 + horizonBuffer[x0] - HORIZON, color);
             }
@@ -469,15 +548,15 @@ void Renderer::DrawFloorLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
         viewZ2 = CLIP_PLANE;
     }
     // apply perspective projection
-    int16_t vx1 = (int16_t)((int32_t)viewX1 * NEAR_PLANE * CAMERA_SCALE / viewZ1);
-    int16_t vx2 = (int16_t)((int32_t)viewX2 * NEAR_PLANE * CAMERA_SCALE / viewZ2);
+    int16_t vx1 = (int16_t)((int32_t)viewX1 * nearPlane * CAMERA_SCALE / viewZ1);
+    int16_t vx2 = (int16_t)((int32_t)viewX2 * nearPlane * CAMERA_SCALE / viewZ2);
     // transform the end points into screen space
-    int16_t sx1 = (int16_t)((DISPLAY_WIDTH / 2) + vx1);
-    int16_t sx2 = (int16_t)((DISPLAY_WIDTH / 2) + vx2) - 1;
-    //if (sx2 <= 0 || sx1 >= DISPLAY_WIDTH)
+    int16_t sx1 = (int16_t)(viewCenterX + vx1);
+    int16_t sx2 = (int16_t)(viewCenterX + vx2) - 1;
+    //if (sx2 < GAME_VIEW_X || sx1 >= GAME_VIEW_RIGHT)
     //	return;
-    int16_t w1 = (int16_t)((CELL_SIZE / 2 * NEAR_PLANE * CAMERA_SCALE) / viewZ1);
-    int16_t w2 = (int16_t)((CELL_SIZE / 2 * NEAR_PLANE * CAMERA_SCALE) / viewZ2);
+    int16_t w1 = (int16_t)((CELL_SIZE / 2 * nearPlane * CAMERA_SCALE) / viewZ1);
+    int16_t w2 = (int16_t)((CELL_SIZE / 2 * nearPlane * CAMERA_SCALE) / viewZ2);
     DrawFloorLineInner(sx1, HORIZON + w1, sx2, HORIZON + w2);
 }
 void Renderer::DrawFloorLines() {
@@ -593,7 +672,7 @@ void Renderer::DrawCell(uint8_t x, uint8_t y) {
     default:
         break;
     }
-    if(numBufferSlicesFilled >= DISPLAY_WIDTH) {
+    if(numBufferSlicesFilled >= viewWidth) {
         return;
     }
     if(!Map::IsSolid(x, y)) {
@@ -614,6 +693,10 @@ void Renderer::DrawCell(uint8_t x, uint8_t y) {
         vectorTexture0; // (const uint8_t*) pgm_read_ptr(&textures[(uint8_t)cellType - (uint8_t)CellType::FirstSolidCell]);
 #endif
     if(!blockedLeft && camera.x < x1) {
+        const bool topContinues = Map::IsSolid(x, y - 1) && !Map::IsSolid(x - 1, y - 1);
+        const bool bottomContinues = Map::IsSolid(x, y + 1) && !Map::IsSolid(x - 1, y + 1);
+        const bool topEdge = !topContinues;
+        const bool bottomEdge = !bottomContinues;
 #if WITH_TEXTURES
         DrawWall(
             texture,
@@ -621,14 +704,18 @@ void Renderer::DrawCell(uint8_t x, uint8_t y) {
             y1,
             x1,
             y2,
-            !blockedUp && camera.y > y1,
-            !blockedDown && camera.y < y2,
+            topEdge,
+            bottomEdge,
             true);
 #else
-        DrawWall(x1, y1, x1, y2, !blockedUp && camera.y > y1, !blockedDown && camera.y < y2, true);
+        DrawWall(x1, y1, x1, y2, topEdge, bottomEdge, true);
 #endif
     }
     if(!blockedDown && camera.y > y2) {
+        const bool leftContinues = Map::IsSolid(x - 1, y) && !Map::IsSolid(x - 1, y + 1);
+        const bool rightContinues = Map::IsSolid(x + 1, y) && !Map::IsSolid(x + 1, y + 1);
+        const bool leftEdge = !leftContinues;
+        const bool rightEdge = !rightContinues;
 #if WITH_TEXTURES
         DrawWall(
             texture,
@@ -636,15 +723,18 @@ void Renderer::DrawCell(uint8_t x, uint8_t y) {
             y2,
             x2,
             y2,
-            !blockedLeft && camera.x > x1,
-            !blockedRight && camera.x < x2,
+            leftEdge,
+            rightEdge,
             false);
 #else
-        DrawWall(
-            x1, y2, x2, y2, !blockedLeft && camera.x > x1, !blockedRight && camera.x < x2, false);
+        DrawWall(x1, y2, x2, y2, leftEdge, rightEdge, false);
 #endif
     }
     if(!blockedRight && camera.x > x2) {
+        const bool bottomContinues = Map::IsSolid(x, y + 1) && !Map::IsSolid(x + 1, y + 1);
+        const bool topContinues = Map::IsSolid(x, y - 1) && !Map::IsSolid(x + 1, y - 1);
+        const bool bottomEdge = !bottomContinues;
+        const bool topEdge = !topContinues;
 #if WITH_TEXTURES
         DrawWall(
             texture,
@@ -652,14 +742,18 @@ void Renderer::DrawCell(uint8_t x, uint8_t y) {
             y2,
             x2,
             y1,
-            !blockedDown && camera.y < y2,
-            !blockedUp && camera.y > y1,
+            bottomEdge,
+            topEdge,
             true);
 #else
-        DrawWall(x2, y2, x2, y1, !blockedDown && camera.y < y2, !blockedUp && camera.y > y1, true);
+        DrawWall(x2, y2, x2, y1, bottomEdge, topEdge, true);
 #endif
     }
     if(!blockedUp && camera.y < y1) {
+        const bool rightContinues = Map::IsSolid(x + 1, y) && !Map::IsSolid(x + 1, y - 1);
+        const bool leftContinues = Map::IsSolid(x - 1, y) && !Map::IsSolid(x - 1, y - 1);
+        const bool rightEdge = !rightContinues;
+        const bool leftEdge = !leftContinues;
 #if WITH_TEXTURES
         DrawWall(
             texture,
@@ -667,12 +761,11 @@ void Renderer::DrawCell(uint8_t x, uint8_t y) {
             y1,
             x1,
             y1,
-            !blockedRight && camera.x < x2,
-            !blockedLeft && camera.x > x1,
+            rightEdge,
+            leftEdge,
             false);
 #else
-        DrawWall(
-            x2, y1, x1, y1, !blockedRight && camera.x < x2, !blockedLeft && camera.x > x1, false);
+        DrawWall(x2, y1, x1, y1, rightEdge, leftEdge, false);
 #endif
     }
 }
@@ -734,11 +827,11 @@ void DrawScaledOutline(
     uint8_t size = 2 * halfSize;
     const uint8_t* lut =
         scaleLUT + (((halfSize - 1) >> shiftAmount) * ((halfSize - 1) >> shiftAmount));
-    uint8_t i0 = x < 0 ? -x : 0;
-    uint8_t i1 = x + size > DISPLAY_WIDTH ? DISPLAY_WIDTH - x : size;
+    uint8_t i0 = x < Renderer::viewX ? (uint8_t)(Renderer::viewX - x) : 0;
+    uint8_t i1 = x + size > Renderer::viewRight ? Renderer::viewRight - x : size;
     uint8_t j0 = y < 0 ? -y : 0;
     uint8_t j1 = y + size > DISPLAY_HEIGHT ? DISPLAY_HEIGHT - y : size;
-    int8_t outX = x >= 0 ? x : 0;
+    int8_t outX = x >= Renderer::viewX ? x : (int8_t)Renderer::viewX;
     uint16_t invertMask = invert ? 0xffff : 0;
     uint16_t leftTransparencyAndColourColumn = 0;
     uint16_t middleTransparencyColumn = 0;
@@ -849,11 +942,11 @@ inline void DrawScaledNoOutline(
     uint8_t inverseCameraDistance) {
     uint8_t size = 2 * halfSize;
     const uint8_t* lut = scaleLUT + ((halfSize / scaleMultiplier) * (halfSize / scaleMultiplier));
-    uint8_t i0 = x < 0 ? -x : 0;
-    uint8_t i1 = x + size > DISPLAY_WIDTH ? DISPLAY_WIDTH - x : size;
+    uint8_t i0 = x < Renderer::viewX ? (uint8_t)(Renderer::viewX - x) : 0;
+    uint8_t i1 = x + size > Renderer::viewRight ? Renderer::viewRight - x : size;
     uint8_t j0 = y < 0 ? -y : 0;
     uint8_t j1 = y + size > DISPLAY_HEIGHT ? DISPLAY_HEIGHT - y : size;
-    int8_t outX = x >= 0 ? x : 0;
+    int8_t outX = x >= Renderer::viewX ? x : (int8_t)Renderer::viewX;
     for(uint8_t i = i0; i < i1; i++) {
         const bool isVisible = Renderer::wBuffer[outX] < inverseCameraDistance;
         if(isVisible) {
@@ -914,16 +1007,19 @@ void Renderer::DrawScaled(
     } else if(halfSize > 2) {
         DrawScaledInner(data, x, y, halfSize, inverseCameraDistance, 0, invert);
     } else if(halfSize == 2) {
-        if(Renderer::wBuffer[x] < inverseCameraDistance) {
+        const int16_t x0 = x;
+        const int16_t x1 = x + 1;
+        if(x0 >= viewX && Renderer::wBuffer[x0] < inverseCameraDistance) {
             Platform::PutPixel(x, y, color);
             Platform::PutPixel(x, y + 1, color);
         }
-        if(Renderer::wBuffer[x + 1] < inverseCameraDistance) {
+        if(x1 >= viewX && Renderer::wBuffer[x1] < inverseCameraDistance) {
             Platform::PutPixel(x + 1, y, color);
             Platform::PutPixel(x + 1, y + 1, color);
         }
     } else {
-        if(Renderer::wBuffer[x] < inverseCameraDistance) {
+        const int16_t x0 = x;
+        if(x0 >= viewX && Renderer::wBuffer[x0] < inverseCameraDistance) {
             Platform::PutPixel(x, y, color);
         }
     }
@@ -1011,7 +1107,8 @@ void Renderer::RenderQueuedDrawables() {
 }
 int8_t Renderer::GetHorizon(int16_t x) {
     if(x < 0) x = 0;
-    if(x >= DISPLAY_WIDTH) x = DISPLAY_WIDTH - 1;
+    if(x < viewX) x = viewX;
+    if(x >= viewRight) x = viewRight - 1;
     return horizonBuffer[x];
 }
 bool Renderer::TransformAndCull(
@@ -1066,8 +1163,8 @@ void Renderer::DrawObject(
 void Renderer::DrawWeapon() {
     constexpr uint8_t gunWidth = 40;
     constexpr uint8_t gunHeight = 29;
-    int x = DISPLAY_WIDTH - gunWidth + 3 + camera.tilt / 6;
-    int y = DISPLAY_HEIGHT - gunHeight + 1 - camera.bob;
+    int x = DISPLAY_WIDTH - gunWidth + 2 + camera.tilt / 6;
+    int y = DISPLAY_HEIGHT - gunHeight - camera.bob;
     uint8_t reloadTime = Game::player.reloadTime;
     if(reloadTime > 0) {
         Platform::DrawSprite(x + reloadTime / 2, y + reloadTime / 3, gunSpriteData, 0);
@@ -1076,20 +1173,20 @@ void Renderer::DrawWeapon() {
     }
 }
 void Renderer::DrawBackground() {
-    uint8_t* ptr = Platform::GetScreenBuffer();
-    uint8_t counter = 128;
-    while(counter--) {
-        *ptr++ = 0x55;
-        *ptr++ = 0x00;
-        *ptr++ = 0xaa;
-        *ptr++ = 0x00;
+    constexpr int16_t topTileW = 18;
+    constexpr int16_t bottomTileW = 34;
+    constexpr int16_t bottomTileH = 21;
+    constexpr int16_t centerOffset = 3;
+
+    Platform::FillScreen(COLOUR_WHITE);
+
+    for(int16_t x = 0; x < DISPLAY_WIDTH; x += topTileW) {
+        Platform::DrawSprite(x, centerOffset, backgroundBottomSpriteData, 0);
     }
-    counter = 128;
-    while(counter--) {
-        *ptr++ = 0x55;
-        *ptr++ = 0xff;
-        *ptr++ = 0xaa;
-        *ptr++ = 0xff;
+
+    const int16_t bottomY = DISPLAY_HEIGHT - bottomTileH - centerOffset;
+    for(int16_t x = 0; x < DISPLAY_WIDTH; x += bottomTileW) {
+        Platform::DrawSprite(x, bottomY, backgroundTopSpriteData, 0);
     }
 }
 void Renderer::DrawBar(uint8_t* screenPtr, const uint8_t* iconData, uint8_t amount, uint8_t max) {
@@ -1113,49 +1210,36 @@ void Renderer::DrawBar(uint8_t* screenPtr, const uint8_t* iconData, uint8_t amou
     screenPtr[x] = 0;
 }
 void Renderer::DrawDamageIndicator() {
-    uint8_t* upper = Platform::GetScreenBuffer();
-    uint8_t* lower = upper + DISPLAY_WIDTH * 7;
-    for(int x = 1; x < DISPLAY_WIDTH - 1; x++) {
-        upper[x] &= 0xfe;
-        lower[x] &= 0x7f;
-    }
-    uint8_t* ptr = Platform::GetScreenBuffer();
-    for(int y = 0; y < DISPLAY_HEIGHT / 8; y++) {
-        *ptr = 0;
-        ptr += (DISPLAY_WIDTH - 1);
-        *ptr = 0;
-        ptr++;
-    }
 }
 void Renderer::DrawHUD() {
     constexpr uint8_t aimWidth = 13;
     constexpr uint8_t aimHeight = 13;
-    //constexpr uint8_t barWidth = 40;
-    uint8_t* screenBuffer = Platform::GetScreenBuffer();
-    //uint8_t* screenPtr = screenBuffer + DISPLAY_WIDTH * 6;
     int8_t aimSkew = camera.tilt / 28;
+    const bool invertAim = (Game::player.damageTime > 0);
     if(aimSkew < -2) aimSkew = -2;
     if(aimSkew > 2) aimSkew = 2;
     DrawTiltedSprite(
-        (DISPLAY_WIDTH - aimWidth) / 2,
+        viewCenterX - aimWidth / 2,
         (DISPLAY_HEIGHT - aimHeight) / 2 - camera.bob / 2,
         aimSpriteData,
-        aimSkew);
-    DrawBar(
-        screenBuffer + DISPLAY_WIDTH * 7, heartSpriteData, Game::player.hp, Game::player.maxHP);
-    DrawBar(
-        screenBuffer + DISPLAY_WIDTH * 6, manaSpriteData, Game::player.mana, Game::player.maxMana);
-    if(Game::player.damageTime > 0) DrawDamageIndicator();
-    if(Game::displayMessage) Font::PrintString(Game::displayMessage, 0, 0);
+        aimSkew,
+        invertAim);
+    Platform::DrawSprite(0, 0, avatarSpriteData, 0);
+    DrawPixelNumber(11, 23, Game::player.hp, COLOUR_WHITE);
+    DrawPixelNumber(11, 35, Game::player.mana, COLOUR_WHITE);
+    if(Game::displayMessage) Font::PrintString(Game::displayMessage, 0, viewX);
 }
 void Renderer::Render() {
+    SetGameViewport();
     globalRenderFrame++;
     DrawBackground();
+    ClearSidebar();
     numBufferSlicesFilled = 0;
     numQueuedDrawables = 0;
     for(uint8_t n = 0; n < DISPLAY_WIDTH; n++) {
-        wBuffer[n] = 0;
-        horizonBuffer[n] = HORIZON + (((DISPLAY_WIDTH / 2 - n) * camera.tilt) >> 8) + camera.bob;
+        const bool isGameColumn = (n >= viewX);
+        wBuffer[n] = isGameColumn ? 0 : 255;
+        horizonBuffer[n] = HORIZON + (((viewCenterX - n) * camera.tilt) >> 8) + camera.bob;
     }
     camera.cellX = camera.x / CELL_SIZE;
     camera.cellY = camera.y / CELL_SIZE;
@@ -1171,5 +1255,6 @@ void Renderer::Render() {
     RenderQueuedDrawables();
     DrawWeapon();
     DrawHUD();
+    DrawGameOverlayFrame();
     //Map::DrawMinimap();
 }

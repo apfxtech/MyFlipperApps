@@ -48,8 +48,15 @@ public:
     static Camera camera;
     static uint8_t wBuffer[DISPLAY_WIDTH];
     static uint8_t globalRenderFrame;
+    static int16_t viewX;
+    static int16_t viewWidth;
+    static int16_t viewRight;
+    static int16_t viewCenterX;
+    static int16_t nearPlane;
 
     static void Render();
+    static void SetFullScreenViewport();
+    static void SetGameViewport();
 
     static void DrawObject(
         const uint16_t* spriteData,

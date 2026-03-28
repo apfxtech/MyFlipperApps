@@ -60,6 +60,7 @@ static uint8_t MaxTop() {
 }
 
 void DrawMenuRoom() {
+    Renderer::SetFullScreenViewport();
     const int16_t leftWall = 1 * CELL_SIZE;
     const int16_t rightWall = 4 * CELL_SIZE;
     const int16_t topWall = 1 * CELL_SIZE;

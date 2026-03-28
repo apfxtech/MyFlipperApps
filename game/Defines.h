@@ -44,6 +44,11 @@ static inline const void* pgm_read_ptr_safe(const void* p) {
 // Display configuration
 #define DISPLAY_WIDTH 128
 #define DISPLAY_HEIGHT 64
+#define SIDEBAR_WIDTH 23
+#define GAME_VIEW_X SIDEBAR_WIDTH
+#define GAME_VIEW_WIDTH (DISPLAY_WIDTH - SIDEBAR_WIDTH)
+#define GAME_VIEW_RIGHT DISPLAY_WIDTH
+#define GAME_VIEW_CENTER_X (GAME_VIEW_X + GAME_VIEW_WIDTH / 2)
 
 // Game settings
 #define DEV_MODE 0
