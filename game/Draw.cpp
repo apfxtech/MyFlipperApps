@@ -714,8 +714,8 @@ void Renderer::DrawCell(uint8_t x, uint8_t y) {
     if(!blockedDown && camera.y > y2) {
         const bool leftContinues = Map::IsSolid(x - 1, y) && !Map::IsSolid(x - 1, y + 1);
         const bool rightContinues = Map::IsSolid(x + 1, y) && !Map::IsSolid(x + 1, y + 1);
-        const bool leftEdge = !leftContinues;
-        const bool rightEdge = !rightContinues;
+        const bool leftEdge = !blockedLeft && camera.x >= x1 && !leftContinues;
+        const bool rightEdge = !blockedRight && camera.x <= x2 && !rightContinues;
 #if WITH_TEXTURES
         DrawWall(
             texture,
@@ -752,8 +752,8 @@ void Renderer::DrawCell(uint8_t x, uint8_t y) {
     if(!blockedUp && camera.y < y1) {
         const bool rightContinues = Map::IsSolid(x + 1, y) && !Map::IsSolid(x + 1, y - 1);
         const bool leftContinues = Map::IsSolid(x - 1, y) && !Map::IsSolid(x - 1, y - 1);
-        const bool rightEdge = !rightContinues;
-        const bool leftEdge = !leftContinues;
+        const bool rightEdge = !blockedRight && camera.x <= x2 && !rightContinues;
+        const bool leftEdge = !blockedLeft && camera.x >= x1 && !leftContinues;
 #if WITH_TEXTURES
         DrawWall(
             texture,
