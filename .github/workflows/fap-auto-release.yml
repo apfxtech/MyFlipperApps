@@ -1,0 +1,90 @@
+name: FAP Build & Auto Release
+
+on:
+  push:
+    tags:
+      - 'build-*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: flipperdevices/flipperzero-firmware
+          ref: release
+          path: firmware
+          fetch-depth: 0
+          submodules: recursive
+
+      - uses: actions/checkout@v4
+        with:
+          repository: apfxtech/MyFlipperApps
+          path: repo
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Search and edit manifests
+        id: gen-manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 repo/.github/scripts/prepare_manifests.py
+
+      - name: Build changelog from commits
+        id: gen-changelog
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 repo/.github/scripts/build_changelog.py
+
+      - name: Extract firmware metadata
+        id: firmware-meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash repo/.github/scripts/firmware_meta.sh firmware
+
+      - name: Build all applications
+        id: build-apps
+        shell: bash
+        env:
+          APP_IDS: ${{ steps.gen-manifest.outputs.app_ids }}
+        run: |
+          set -euo pipefail
+          bash repo/.github/scripts/build_apps.sh firmware
+
+      - name: Collect FAP artifacts
+        shell: bash
+        env:
+          APP_IDS: ${{ steps.gen-manifest.outputs.app_ids }}
+        run: |
+          set -euo pipefail
+          bash repo/.github/scripts/collect_faps.sh firmware artifacts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MyFlipperApps-${{ github.ref_name }}
+          path: artifacts/*.fap
+
+      - name: Upload release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          GIT_SHA: ${{ github.sha }}
+          FW_VERSION: ${{ steps.firmware-meta.outputs.fw_version }}
+          API_VERSION: ${{ steps.build-apps.outputs.api_version }}
+          CHANGELOG: ${{ steps.gen-changelog.outputs.changelog }}
+        run: |
+          set -euo pipefail
+          bash repo/.github/scripts/publish_release.sh artifacts
