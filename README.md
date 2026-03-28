@@ -186,18 +186,37 @@ First-person action shooter inspired by Wolfenstein 3D with maze levels, enemies
 **James Howard**
 [Wolfenduino](https://github.com/jhhoward/WolfenduinoFX)
 
-## Ardens
-Arduboy simulator and debugging tool for running, profiling, and testing Arduboy applications.
+## [WIP] Ardens
+Arduboy simulator Arduboy applications.
 
 <table>
 <tr>
-<td><img src="https://raw.githubusercontent.com/tiberiusbrown/ardens/master/screenshot.png" width="320"></td>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperArdens/main/screenshots/evasion.jpg" width="220"></td>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperArdens/main/screenshots/spinning_rat_1.jpg" width="220"></td>
+</tr>
+<tr>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperArdens/main/screenshots/spinning_rat_2.jpg" width="220"></td>
+<td><img src="https://raw.githubusercontent.com/apfxtech/FlipperArdens/main/screenshots/spinning_rat_3.jpg" width="220"></td>
 </tr>
 </table>
 
-### Flipper Zero Port
+> **Experimental app.**
+>  
+> This project is currently in a very early and unstable state and requires a full refactor.
+> The current implementation should be rewritten in **C** and the emulation/rendering algorithm should be replaced with an approach optimized for **STM32**.
+>  
+> **Current status:**
+> - about half of the games do not start;
+> - current performance is extremely low;
+> - typical FPS is around **0.5-1**.
+> - Disable usb and buzzer
+>  
+> At this stage, this repository should be treated only as an experiment/proof of concept, not as a usable Arduboy emulator for Flipper Zero.
+
+## Flipper Zero Port
 [FlipperArdens](https://github.com/apfxtech/FlipperArdens)
 
-### Original
-**Tiberius Brown**
+## Original
+**Tiberius Brown**  
 [Ardens](https://github.com/tiberiusbrown/ardens)
+
