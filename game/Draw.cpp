@@ -154,21 +154,21 @@ void DrawGameWindowMask() {
     }
 
     for(int16_t y = 4; y <= DISPLAY_HEIGHT - 4; y++) {
-        Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), (uint8_t)y, COLOUR_WHITE);
+        Platform::PutPixel((uint8_t)GAME_VIEW_X, (uint8_t)y, COLOUR_WHITE);
         Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), (uint8_t)y, COLOUR_WHITE);
     }
 
-    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 3), 1, COLOUR_WHITE);
-    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 2), 2, COLOUR_WHITE);
-    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), 3, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 2), 1, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), 2, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)GAME_VIEW_X, 3, COLOUR_WHITE);
 
     Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 4), 1, COLOUR_WHITE);
     Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 3), 2, COLOUR_WHITE);
     Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), 3, COLOUR_WHITE);
 
-    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 3), DISPLAY_HEIGHT - 2, COLOUR_WHITE);
-    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 2), DISPLAY_HEIGHT - 3, COLOUR_WHITE);
-    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), DISPLAY_HEIGHT - 4, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 2), DISPLAY_HEIGHT - 2, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), DISPLAY_HEIGHT - 3, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)GAME_VIEW_X, DISPLAY_HEIGHT - 4, COLOUR_WHITE);
 
     Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 4), DISPLAY_HEIGHT - 2, COLOUR_WHITE);
     Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 3), DISPLAY_HEIGHT - 3, COLOUR_WHITE);
@@ -1312,7 +1312,7 @@ void Renderer::DrawBackground() {
     constexpr int16_t topTileW = 18;
     constexpr int16_t bottomTileW = 34;
     constexpr int16_t bottomTileH = 21;
-    constexpr int16_t centerOffset = 3;
+    constexpr int16_t centerOffset = 2;
 
     Platform::FillScreen(COLOUR_WHITE);
 
