@@ -18,7 +18,6 @@ CellType Game::hudPickupIcon = CellType::Empty;
 uint8_t Game::hudPickupIconTime = 0;
 Game::State Game::state = Game::State::Menu;
 uint8_t Game::floor = 1;
-Game::LevelTheme Game::levelTheme = Game::LevelTheme::Day;
 uint16_t Game::levelThemeSeed = 0;
 uint8_t Game::globalTickFrame = 0;
 Stats Game::stats;
@@ -82,7 +81,6 @@ void Game::StartLevel() {
     ParticleSystemManager::Init();
     ProjectileManager::Init();
     EnemyManager::Init();
-    levelTheme = (Random() & 1u) ? LevelTheme::Night : LevelTheme::Day;
     levelThemeSeed = Random();
     MapGenerator::Generate();
     EnemyManager::SpawnEnemies();

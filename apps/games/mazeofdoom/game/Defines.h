@@ -52,6 +52,9 @@ static inline const void* pgm_read_ptr_safe(const void* p) {
 
 // Game settings
 #define DEV_MODE 0
+#ifndef LEVEL_THEME_DAY
+#define LEVEL_THEME_DAY 0
+#endif
 
 // Input definitions
 #define INPUT_LEFT 1

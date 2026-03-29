@@ -41,8 +41,46 @@ constexpr uint8_t kNightStarCount = 18;
 constexpr int8_t kNightSkyFloorGap = 0;
 constexpr uint8_t kNightStaticStarChance = 77; // ~30% of 256
 
+struct BackgroundParallaxState {
+    uint16_t levelSeed = 0;
+    int16_t skySampleX = 0;
+};
+
+BackgroundParallaxState g_backgroundParallax;
+
 uint16_t AdvanceNoise(uint16_t value) {
     return (uint16_t)(value * 2053u + 13849u);
+}
+
+uint8_t WrapSpriteColumn(int16_t sampleX, uint8_t tileWidth) {
+    if(tileWidth == 0) return 0;
+    sampleX %= tileWidth;
+    if(sampleX < 0) {
+        sampleX += tileWidth;
+    }
+    return (uint8_t)sampleX;
+}
+
+uint8_t WrapSpriteRow(int16_t sampleY, uint8_t tileHeight) {
+    if(tileHeight == 0) return 0;
+    sampleY %= tileHeight;
+    if(sampleY < 0) {
+        sampleY += tileHeight;
+    }
+    return (uint8_t)sampleY;
+}
+
+void ResetBackgroundParallaxOrigin() {
+    g_backgroundParallax.levelSeed = Game::levelThemeSeed;
+    g_backgroundParallax.skySampleX = 0;
+}
+
+void UpdateBackgroundParallax() {
+    if(g_backgroundParallax.levelSeed != Game::levelThemeSeed) {
+        ResetBackgroundParallaxOrigin();
+    }
+    // Sky tracks absolute yaw, so there is no drift or fake inertia.
+    g_backgroundParallax.skySampleX = Renderer::camera.angle;
 }
 
 void DrawStaticNightStar(uint8_t x, uint8_t y, uint8_t size) {
@@ -74,7 +112,11 @@ void DrawNightSkyStars(int16_t topY, int16_t bottomY) {
     const uint8_t skyHeight = (uint8_t)(bottomY - topY);
     for(uint8_t i = 0; i < kNightStarCount; i++) {
         noise = AdvanceNoise(noise);
-        const uint8_t x = (uint8_t)(GAME_VIEW_X + (noise % GAME_VIEW_WIDTH));
+        const uint8_t starX = (uint8_t)(
+            GAME_VIEW_X +
+            WrapSpriteColumn(
+                (int16_t)(noise % GAME_VIEW_WIDTH) + g_backgroundParallax.skySampleX,
+                GAME_VIEW_WIDTH));
         noise = AdvanceNoise(noise);
         const uint8_t y = (uint8_t)(topY + (noise % skyHeight));
         noise = AdvanceNoise(noise);
@@ -85,19 +127,74 @@ void DrawNightSkyStars(int16_t topY, int16_t bottomY) {
         const uint8_t phase = (uint8_t)(noise % 20u);
 
         if(isStatic) {
-            DrawStaticNightStar(x, y, radius);
+            DrawStaticNightStar(starX, y, radius);
         } else {
-            DrawAnimatedNightStar(x, y, phase, radius);
+            DrawAnimatedNightStar(starX, y, phase, radius);
         }
     }
 }
 
-void DrawTiledSprite(const uint8_t* spriteData, int16_t y) {
+bool ReadSpritePixel(
+    const uint8_t* spriteData,
+    uint8_t sampleX,
+    uint8_t sampleY,
+    uint8_t& colour,
+    uint8_t& mask) {
     const uint8_t tileWidth = pgm_read_byte(&spriteData[0]);
-    if(tileWidth == 0) return;
+    const uint8_t tileHeight = pgm_read_byte(&spriteData[1]);
+    if(tileWidth == 0 || tileHeight == 0) return false;
 
-    for(int16_t x = 0; x < DISPLAY_WIDTH; x += tileWidth) {
-        Platform::DrawSprite(x, y, spriteData, 0);
+    const uint8_t* data = spriteData + 2;
+    const uint8_t page = (uint8_t)(sampleY >> 3);
+    const uint16_t srcIndex = (uint16_t)((page * tileWidth + sampleX) * 2u);
+    colour = pgm_read_byte(&data[srcIndex]);
+    mask = pgm_read_byte(&data[srcIndex + 1]);
+    return true;
+}
+
+void DrawPerspectiveFloorBand(const uint8_t* spriteData, int16_t y) {
+    const uint8_t tileWidth = pgm_read_byte(&spriteData[0]);
+    const uint8_t tileHeight = pgm_read_byte(&spriteData[1]);
+    if(tileWidth == 0 || tileHeight == 0) return;
+
+    const int16_t bandBottom = y + tileHeight;
+    const int16_t forwardX = FixedCos(Renderer::camera.angle);
+    const int16_t forwardY = FixedSin(Renderer::camera.angle);
+    const int16_t rightX = FixedCos(Renderer::camera.angle + FIXED_ANGLE_90);
+    const int16_t rightY = FixedSin(Renderer::camera.angle + FIXED_ANGLE_90);
+
+    for(int16_t dx = Renderer::viewX; dx < Renderer::viewRight; dx++) {
+        const int16_t horizon = Renderer::GetHorizon(dx);
+        for(int16_t dstY = y; dstY < bandBottom && dstY < DISPLAY_HEIGHT; dstY++) {
+            const int16_t screenDepth = dstY - horizon;
+            if(screenDepth <= 0) continue;
+
+            const int32_t viewZ =
+                ((int32_t)(CELL_SIZE / 2) * Renderer::nearPlane * CAMERA_SCALE) / screenDepth;
+            const int32_t viewX =
+                ((int32_t)(dx - Renderer::viewCenterX) * viewZ) / Renderer::nearPlane;
+            const int32_t worldX =
+                Renderer::camera.x +
+                (((int32_t)forwardX * viewZ + (int32_t)rightX * viewX) >> 8);
+            const int32_t worldY =
+                Renderer::camera.y +
+                (((int32_t)forwardY * viewZ + (int32_t)rightY * viewX) >> 8);
+
+            const uint8_t sx = WrapSpriteColumn((int16_t)((worldX * tileWidth) >> 8), tileWidth);
+            const uint8_t sy = WrapSpriteRow((int16_t)((worldY * tileHeight) >> 8), tileHeight);
+
+            uint8_t colourBits = 0;
+            uint8_t maskBits = 0;
+            if(!ReadSpritePixel(spriteData, sx, sy, colourBits, maskBits)) continue;
+
+            const uint8_t bit = (uint8_t)(1u << (sy & 7u));
+            if((maskBits & bit) == 0u) continue;
+
+            Platform::PutPixel(
+                (uint8_t)dx,
+                (uint8_t)dstY,
+                (colourBits & bit) != 0u ? COLOUR_WHITE : COLOUR_BLACK);
+        }
     }
 }
 
@@ -1385,8 +1482,9 @@ void Renderer::DrawWeapon() {
 }
 void Renderer::DrawBackground() {
     constexpr int16_t centerOffset = 2;
+    UpdateBackgroundParallax();
 
-    if(Game::levelTheme == Game::LevelTheme::Night) {
+#if !LEVEL_THEME_DAY
         const uint8_t bottomTileH = pgm_read_byte(&backgroundBottomDarkSpriteData[1]);
         const int16_t bottomY = DISPLAY_HEIGHT - bottomTileH - centerOffset;
         Platform::FillScreen(COLOUR_WHITE);
@@ -1403,14 +1501,14 @@ void Renderer::DrawBackground() {
         }
 
         DrawNightSkyStars(centerOffset, bottomY - 1);
-        DrawTiledSprite(backgroundBottomDarkSpriteData, bottomY);
+        DrawPerspectiveFloorBand(backgroundBottomDarkSpriteData, bottomY);
         return;
-    }
-
+#else
     const uint8_t bottomTileH = pgm_read_byte(&backgroundTopSpriteData[1]);
     Platform::FillScreen(COLOUR_WHITE);
-    DrawTiledSprite(backgroundBottomSpriteData, centerOffset);
-    DrawTiledSprite(backgroundTopSpriteData, DISPLAY_HEIGHT - bottomTileH - centerOffset);
+    DrawTiledSpriteSampled(backgroundBottomSpriteData, centerOffset, g_backgroundParallax.skySampleX, 0);
+    DrawPerspectiveFloorBand(backgroundTopSpriteData, DISPLAY_HEIGHT - bottomTileH - centerOffset);
+#endif
 }
 void Renderer::DrawBar(uint8_t* screenPtr, const uint8_t* iconData, uint8_t amount, uint8_t max) {
     constexpr uint8_t iconWidth = 8;
@@ -1455,6 +1553,12 @@ void Renderer::DrawHUD() {
 void Renderer::Render() {
     SetGameViewport();
     globalRenderFrame++;
+    camera.cellX = camera.x / CELL_SIZE;
+    camera.cellY = camera.y / CELL_SIZE;
+    camera.rotCos = FixedCos(-camera.angle);
+    camera.rotSin = FixedSin(-camera.angle);
+    camera.clipCos = FixedCos(-camera.angle + CLIP_ANGLE);
+    camera.clipSin = FixedSin(-camera.angle + CLIP_ANGLE);
     for(uint8_t n = 0; n < DISPLAY_WIDTH; n++) {
         const bool isGameColumn = (n >= viewX);
         wBuffer[n] = isGameColumn ? 0 : 255;
@@ -1464,12 +1568,6 @@ void Renderer::Render() {
     ClearSidebar();
     numBufferSlicesFilled = 0;
     numQueuedDrawables = 0;
-    camera.cellX = camera.x / CELL_SIZE;
-    camera.cellY = camera.y / CELL_SIZE;
-    camera.rotCos = FixedCos(-camera.angle);
-    camera.rotSin = FixedSin(-camera.angle);
-    camera.clipCos = FixedCos(-camera.angle + CLIP_ANGLE);
-    camera.clipSin = FixedSin(-camera.angle + CLIP_ANGLE);
     DrawCells();
     //DrawFloorLines();
     EnemyManager::Draw();
