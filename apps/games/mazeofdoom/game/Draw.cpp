@@ -37,6 +37,51 @@ constexpr int16_t kSidebarMapX = 2;
 constexpr int16_t kSidebarMapY = DISPLAY_HEIGHT - 16 - 2;
 constexpr int16_t kSidebarMapWidth = 19;
 constexpr int16_t kSidebarMapHeight = 16;
+constexpr uint8_t kNightStarCount = 18;
+constexpr int8_t kNightSkyFloorGap = 0;
+
+uint16_t AdvanceNoise(uint16_t value) {
+    return (uint16_t)(value * 2053u + 13849u);
+}
+
+void DrawNightSkyStars(int16_t topY, int16_t bottomY) {
+    if(bottomY <= topY) return;
+
+    uint16_t noise = (uint16_t)(Game::levelThemeSeed ^ ((uint16_t)Game::floor << 8));
+    const uint8_t skyHeight = (uint8_t)(bottomY - topY);
+    for(uint8_t i = 0; i < kNightStarCount; i++) {
+        noise = AdvanceNoise(noise);
+        const uint8_t x = (uint8_t)(GAME_VIEW_X + (noise % GAME_VIEW_WIDTH));
+        noise = AdvanceNoise(noise);
+        const uint8_t y = (uint8_t)(topY + (noise % skyHeight));
+        Platform::PutPixel(x, y, COLOUR_WHITE);
+
+        if((noise & 0x3u) == 0u && x + 1 < DISPLAY_WIDTH) {
+            Platform::PutPixel((uint8_t)(x + 1), y, COLOUR_WHITE);
+        }
+    }
+}
+
+void DrawTiledSprite(const uint8_t* spriteData, int16_t y) {
+    const uint8_t tileWidth = pgm_read_byte(&spriteData[0]);
+    if(tileWidth == 0) return;
+
+    for(int16_t x = 0; x < DISPLAY_WIDTH; x += tileWidth) {
+        Platform::DrawSprite(x, y, spriteData, 0);
+    }
+}
+
+void FillColumn(int16_t x, int16_t topY, int16_t bottomY, uint8_t colour) {
+    if(topY > bottomY) return;
+    if(x < 0 || x >= DISPLAY_WIDTH) return;
+
+    if(topY < 0) topY = 0;
+    if(bottomY >= DISPLAY_HEIGHT) bottomY = DISPLAY_HEIGHT - 1;
+
+    for(int16_t y = topY; y <= bottomY; y++) {
+        Platform::PutPixel((uint8_t)x, (uint8_t)y, colour);
+    }
+}
 
 void DrawTiltedSprite(int16_t x, int16_t y, const uint8_t* bmp, int8_t skew, bool invert = false) {
     if(!bmp) return;
@@ -1309,21 +1354,33 @@ void Renderer::DrawWeapon() {
     }
 }
 void Renderer::DrawBackground() {
-    constexpr int16_t topTileW = 18;
-    constexpr int16_t bottomTileW = 34;
-    constexpr int16_t bottomTileH = 21;
     constexpr int16_t centerOffset = 2;
 
+    if(Game::levelTheme == Game::LevelTheme::Night) {
+        const uint8_t bottomTileH = pgm_read_byte(&backgroundBottomDarkSpriteData[1]);
+        const int16_t bottomY = DISPLAY_HEIGHT - bottomTileH - centerOffset;
+        Platform::FillScreen(COLOUR_WHITE);
+
+        for(int16_t x = viewX; x < viewRight; x++) {
+            int16_t skyBottom = horizonBuffer[x] + kNightSkyFloorGap;
+            if(skyBottom < centerOffset) {
+                skyBottom = centerOffset;
+            }
+            if(skyBottom >= bottomY) {
+                skyBottom = bottomY - 1;
+            }
+            FillColumn(x, centerOffset, skyBottom, COLOUR_BLACK);
+        }
+
+        DrawNightSkyStars(centerOffset, bottomY - 1);
+        DrawTiledSprite(backgroundBottomDarkSpriteData, bottomY);
+        return;
+    }
+
+    const uint8_t bottomTileH = pgm_read_byte(&backgroundTopSpriteData[1]);
     Platform::FillScreen(COLOUR_WHITE);
-
-    for(int16_t x = 0; x < DISPLAY_WIDTH; x += topTileW) {
-        Platform::DrawSprite(x, centerOffset, backgroundBottomSpriteData, 0);
-    }
-
-    const int16_t bottomY = DISPLAY_HEIGHT - bottomTileH - centerOffset;
-    for(int16_t x = 0; x < DISPLAY_WIDTH; x += bottomTileW) {
-        Platform::DrawSprite(x, bottomY, backgroundTopSpriteData, 0);
-    }
+    DrawTiledSprite(backgroundBottomSpriteData, centerOffset);
+    DrawTiledSprite(backgroundTopSpriteData, DISPLAY_HEIGHT - bottomTileH - centerOffset);
 }
 void Renderer::DrawBar(uint8_t* screenPtr, const uint8_t* iconData, uint8_t amount, uint8_t max) {
     constexpr uint8_t iconWidth = 8;
@@ -1368,15 +1425,15 @@ void Renderer::DrawHUD() {
 void Renderer::Render() {
     SetGameViewport();
     globalRenderFrame++;
-    DrawBackground();
-    ClearSidebar();
-    numBufferSlicesFilled = 0;
-    numQueuedDrawables = 0;
     for(uint8_t n = 0; n < DISPLAY_WIDTH; n++) {
         const bool isGameColumn = (n >= viewX);
         wBuffer[n] = isGameColumn ? 0 : 255;
         horizonBuffer[n] = HORIZON + (((viewCenterX - n) * camera.tilt) >> 8) + camera.bob;
     }
+    DrawBackground();
+    ClearSidebar();
+    numBufferSlicesFilled = 0;
+    numQueuedDrawables = 0;
     camera.cellX = camera.x / CELL_SIZE;
     camera.cellY = camera.y / CELL_SIZE;
     camera.rotCos = FixedCos(-camera.angle);

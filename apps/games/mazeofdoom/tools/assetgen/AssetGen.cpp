@@ -59,6 +59,7 @@ static const AssetTask kAssetTasks[] = {
     {AssetKind::Sprite2D, "aim.png", "aimSpriteData"},
     {AssetKind::Sprite2D, "avatar.png", "avatarSpriteData"},
     {AssetKind::Sprite2D, "background_bottom.png", "backgroundBottomSpriteData"},
+    {AssetKind::Sprite2D, "background_bottom_dark.png", "backgroundBottomDarkSpriteData"},
     {AssetKind::Sprite2D, "background_top.png", "backgroundTopSpriteData"},
     {AssetKind::Sprite2D, "logo.png", "logoSpriteData"},
     {AssetKind::Sprite2D, "menu_bottom.png", "menuBottomSpriteData"},

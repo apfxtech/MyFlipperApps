@@ -22,6 +22,11 @@ struct Stats {
 
 class Game {
 public:
+    enum class LevelTheme : uint8_t {
+        Day,
+        Night,
+    };
+
     static Menu menu;
     static uint8_t globalTickFrame;
 
@@ -58,6 +63,8 @@ public:
     static CellType hudPickupIcon;
     static uint8_t hudPickupIconTime;
     static uint8_t floor;
+    static LevelTheme levelTheme;
+    static uint16_t levelThemeSeed;
 
     static Stats stats;
 
