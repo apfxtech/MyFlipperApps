@@ -39,9 +39,32 @@ constexpr int16_t kSidebarMapWidth = 19;
 constexpr int16_t kSidebarMapHeight = 16;
 constexpr uint8_t kNightStarCount = 18;
 constexpr int8_t kNightSkyFloorGap = 0;
+constexpr uint8_t kNightStaticStarChance = 77; // ~30% of 256
 
 uint16_t AdvanceNoise(uint16_t value) {
     return (uint16_t)(value * 2053u + 13849u);
+}
+
+void DrawStaticNightStar(uint8_t x, uint8_t y, uint8_t size) {
+    Platform::PutPixel(x, y, COLOUR_WHITE);
+    if(size < 2) return;
+
+    if(x + 1 < DISPLAY_WIDTH) Platform::PutPixel((uint8_t)(x + 1), y, COLOUR_WHITE);
+    if(y + 1 < DISPLAY_HEIGHT) Platform::PutPixel(x, (uint8_t)(y + 1), COLOUR_WHITE);
+    if(x + 1 < DISPLAY_WIDTH && y + 1 < DISPLAY_HEIGHT) {
+        Platform::PutPixel((uint8_t)(x + 1), (uint8_t)(y + 1), COLOUR_WHITE);
+    }
+}
+
+void DrawAnimatedNightStar(uint8_t x, uint8_t y, uint8_t phase, uint8_t radius) {
+    const uint8_t cycle = (uint8_t)(((Game::globalTickFrame >> 2) + phase) % 20);
+    Platform::PutPixel(x, y, COLOUR_WHITE);
+    if(cycle >= 5 || cycle == 0 || cycle == 4) return;
+
+    if(x >= radius) Platform::PutPixel((uint8_t)(x - radius), y, COLOUR_WHITE);
+    if(x + radius < DISPLAY_WIDTH) Platform::PutPixel((uint8_t)(x + radius), y, COLOUR_WHITE);
+    if(y >= radius) Platform::PutPixel(x, (uint8_t)(y - radius), COLOUR_WHITE);
+    if(y + radius < DISPLAY_HEIGHT) Platform::PutPixel(x, (uint8_t)(y + radius), COLOUR_WHITE);
 }
 
 void DrawNightSkyStars(int16_t topY, int16_t bottomY) {
@@ -54,10 +77,17 @@ void DrawNightSkyStars(int16_t topY, int16_t bottomY) {
         const uint8_t x = (uint8_t)(GAME_VIEW_X + (noise % GAME_VIEW_WIDTH));
         noise = AdvanceNoise(noise);
         const uint8_t y = (uint8_t)(topY + (noise % skyHeight));
-        Platform::PutPixel(x, y, COLOUR_WHITE);
+        noise = AdvanceNoise(noise);
+        const bool isStatic = (uint8_t)(noise & 0xffu) < kNightStaticStarChance;
+        noise = AdvanceNoise(noise);
+        const uint8_t radius = (uint8_t)((noise & 1u) + 1u);
+        noise = AdvanceNoise(noise);
+        const uint8_t phase = (uint8_t)(noise % 20u);
 
-        if((noise & 0x3u) == 0u && x + 1 < DISPLAY_WIDTH) {
-            Platform::PutPixel((uint8_t)(x + 1), y, COLOUR_WHITE);
+        if(isStatic) {
+            DrawStaticNightStar(x, y, radius);
+        } else {
+            DrawAnimatedNightStar(x, y, phase, radius);
         }
     }
 }
