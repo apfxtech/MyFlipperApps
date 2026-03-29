@@ -79,8 +79,8 @@ void UpdateBackgroundParallax() {
     if(g_backgroundParallax.levelSeed != Game::levelThemeSeed) {
         ResetBackgroundParallaxOrigin();
     }
-    // Sky tracks absolute yaw, so there is no drift or fake inertia.
-    g_backgroundParallax.skySampleX = Renderer::camera.angle;
+    // Sky should pan opposite to yaw and slower than walls because it is distant.
+    g_backgroundParallax.skySampleX = (int16_t)(-(int16_t)Renderer::camera.angle / 2);
 }
 
 void DrawStaticNightStar(uint8_t x, uint8_t y, uint8_t size) {
