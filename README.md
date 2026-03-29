@@ -6,6 +6,24 @@ This repository contains multiple applications in one place, excluding large sta
 
 Includes an automated system for sourcing and building apps.
 
+## [WIP] [Maze of Doom](apps/games/mazeofdoom)
+Procedurally generated 1-bit FPS with a Doom-inspired atmosphere, maze exploration, and experimental first-person gameplay.
+
+<table>
+<tr>
+<td><img src="apps/games/mazeofdoom/package/screenshots/1.png" width="150"></td>
+<td><img src="apps/games/mazeofdoom/package/screenshots/2.png" width="150"></td>
+</tr>
+<tr>
+<td><img src="apps/games/mazeofdoom/package/screenshots/4.png" width="150"></td>
+<td><img src="apps/games/mazeofdoom/package/screenshots/5.png" width="150"></td>
+</tr>
+</table>
+
+### Сoncept art
+**luxregina**
+[Maze of Doom concept art and discussion](https://community.arduboy.com/t/wip-maze-of-doom-1-bit-fps/5816)
+
 ## [Tower defense](apps/games/microtd)
 Compact tower defense with upgradeable towers, multiple maps, and wave-based survival.
 
