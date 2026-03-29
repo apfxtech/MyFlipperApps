@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include "game/Defines.h"
+#include "game/Map.h"
 #include "game/Player.h"
 #include "game/Enemy.h"
 #include "game/Menu.h"
@@ -48,11 +49,14 @@ public:
     static void SwitchState(State newState);
 
     static void ShowMessage(const char* message);
+    static void ShowPickup(CellType cellType, const char* message);
 
     static Player player;
 
     static const char* displayMessage;
     static uint8_t displayMessageTime;
+    static CellType hudPickupIcon;
+    static uint8_t hudPickupIconTime;
     static uint8_t floor;
 
     static Stats stats;

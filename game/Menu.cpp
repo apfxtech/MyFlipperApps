@@ -15,39 +15,24 @@
 
 constexpr uint8_t EEPROM_BASE_ADDR = 0;
 
-struct ObjDesc {
-    const uint16_t* sprite;
-    bool animated;
-    bool invert;
-    uint8_t varsIndex;
-};
-
-static const ObjDesc kObjects[] = {
-    { chestSpriteData,    false, false, 0 },
-    { crownSpriteData,    false, false, 1 },
-    { scrollSpriteData,   false, false, 2 },
-    { coinsSpriteData,    false, false, 3 },
-    { skeletonSpriteData, true,  false, 4 },
-    { mageSpriteData,     true,  false, 5 },
-    { batSpriteData,      true,  true,  6 },
-    { spiderSpriteData,   true,  false, 7 },
-    { exitSpriteData,     false, false, 8 }
-};
-
-static constexpr uint8_t kObjectsCount = (uint8_t)(sizeof(kObjects) / sizeof(kObjects[0]));
-static constexpr uint8_t SHIFT_MASK = 63;
-
 namespace {
-constexpr uint8_t MENU_ITEMS_COUNT = 4;
-constexpr uint8_t VISIBLE_ROWS = 2;
+constexpr uint8_t MENU_ITEMS_COUNT = 2;
+constexpr uint8_t MENU_LINE = 6;
+constexpr uint8_t MENU_LINE_Y = MENU_LINE * 8;
+constexpr uint8_t MENU_START_X = 30;
+constexpr uint8_t MENU_SOUND_X = 73;
+constexpr uint8_t CURSOR_OFFSET_X = 10;
+constexpr uint8_t CURSOR_OFFSET_Y = 0;
 
-constexpr uint8_t MENU_FIRST_ROW = 4;
-constexpr uint8_t TEXT_X = 18;
-constexpr uint8_t CURSOR_X = 10;
-
-constexpr uint8_t SPLASH_TIME_TICKS = 45;
-static uint8_t splashTimer = 0;
-static bool splashActive = true;
+constexpr uint8_t kMenuStarCount = 16;
+const uint8_t kStarX[kMenuStarCount] = {
+    7, 15, 22, 30, 41, 50, 60, 71, 80, 89, 98, 106, 114, 119, 123, 126};
+const uint8_t kStarY[kMenuStarCount] = {
+    8, 18, 11, 24, 6, 20, 13, 27, 9, 22, 7, 32, 12, 35, 5, 38};
+const uint8_t kStarPhase[kMenuStarCount] = {
+    0, 5, 11, 17, 3, 9, 15, 1, 7, 13, 19, 4, 10, 16, 2, 8};
+const uint8_t kStarRadius[kMenuStarCount] = {
+    1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1};
 
 static uint8_t Wrap(int v, int n) {
     v %= n;
@@ -55,323 +40,74 @@ static uint8_t Wrap(int v, int n) {
     return (uint8_t)v;
 }
 
-static uint8_t MaxTop() {
-    return (MENU_ITEMS_COUNT > VISIBLE_ROWS) ? (uint8_t)(MENU_ITEMS_COUNT - VISIBLE_ROWS) : 0;
-}
-
 void DrawMenuRoom() {
     Renderer::SetFullScreenViewport();
-    const int16_t leftWall = 1 * CELL_SIZE;
-    const int16_t rightWall = 4 * CELL_SIZE;
-    const int16_t topWall = 1 * CELL_SIZE;
-    const int16_t bottomWall = 4 * CELL_SIZE;
-
-    Renderer::camera.x = (int16_t)((leftWall + rightWall) / 2);
-    Renderer::camera.y = (int16_t)((topWall + bottomWall) / 2);
-
-    static uint16_t angleFP = 0;
-    constexpr uint16_t SPEED_FP = 64;
-    angleFP = (uint16_t)(angleFP + SPEED_FP);
-    Renderer::camera.angle = (uint8_t)(angleFP >> 8);
-
-    Renderer::camera.tilt = 0;
-    Renderer::camera.bob = 0;
-
-    Renderer::globalRenderFrame++;
-    Renderer::DrawBackground();
-
-    Renderer::numBufferSlicesFilled = 0;
-    Renderer::numQueuedDrawables = 0;
-
+    Platform::FillScreen(COLOUR_BLACK);
     for(uint8_t n = 0; n < DISPLAY_WIDTH; n++) {
         Renderer::wBuffer[n] = 0;
-        Renderer::horizonBuffer[n] = HORIZON +
-                                     (((DISPLAY_WIDTH / 2 - n) * Renderer::camera.tilt) >> 8) +
-                                     Renderer::camera.bob;
+        Renderer::horizonBuffer[n] = HORIZON;
     }
 
-    Renderer::camera.cellX = Renderer::camera.x / CELL_SIZE;
-    Renderer::camera.cellY = Renderer::camera.y / CELL_SIZE;
+    for(uint8_t i = 0; i < kMenuStarCount; i++) {
+        const uint8_t cycle = (uint8_t)(((Game::globalTickFrame >> 2) + kStarPhase[i]) % 20);
+        if(cycle >= 5) continue;
 
-    {
-        uint16_t rotPhase = (uint16_t)(0 - angleFP);
-        uint8_t a0 = (uint8_t)(rotPhase >> 8);
-        uint8_t f = (uint8_t)(rotPhase & 0xff);
-        uint8_t a1 = (uint8_t)(a0 + 1);
+        const uint8_t stage = (cycle == 0 || cycle == 4) ? 0 : ((cycle == 2) ? 5 : 1);
+        if(stage == 0) continue;
 
-        int16_t c0 = FixedCos(a0);
-        int16_t c1 = FixedCos(a1);
-        int16_t s0 = FixedSin(a0);
-        int16_t s1 = FixedSin(a1);
-
-        Renderer::camera.rotCos = (int16_t)(c0 + (((int32_t)(c1 - c0) * f) >> 8));
-        Renderer::camera.rotSin = (int16_t)(s0 + (((int32_t)(s1 - s0) * f) >> 8));
-    }
-
-    {
-        uint16_t clipPhase = (uint16_t)(((uint16_t)CLIP_ANGLE << 8) - angleFP);
-        uint8_t a0 = (uint8_t)(clipPhase >> 8);
-        uint8_t f = (uint8_t)(clipPhase & 0xff);
-        uint8_t a1 = (uint8_t)(a0 + 1);
-
-        int16_t c0 = FixedCos(a0);
-        int16_t c1 = FixedCos(a1);
-        int16_t s0 = FixedSin(a0);
-        int16_t s1 = FixedSin(a1);
-
-        Renderer::camera.clipCos = (int16_t)(c0 + (((int32_t)(c1 - c0) * f) >> 8));
-        Renderer::camera.clipSin = (int16_t)(s0 + (((int32_t)(s1 - s0) * f) >> 8));
-    }
-
-#if WITH_IMAGE_TEXTURES
-    const uint16_t* texture = wallTextureData;
-#elif WITH_VECTOR_TEXTURES
-    const uint8_t* texture = vectorTexture0;
-#endif
-
-    constexpr int8_t MIN_CELL = 0;
-    constexpr int8_t MAX_CELL = 4;
-
-#define MENU_SOLID(cx, cy) (((cx) == 0) || ((cx) == MAX_CELL) || ((cy) == 0) || ((cy) == MAX_CELL))
-#define MENU_SOLID_SAFE(cx, cy)                                                   \
-    (((cx) < MIN_CELL || (cx) > MAX_CELL || (cy) < MIN_CELL || (cy) > MAX_CELL) ? \
-         true :                                                                   \
-         MENU_SOLID((cx), (cy)))
-
-    int8_t xd, yd;
-    int8_t x1, y1, x2, y2;
-
-    if(Renderer::camera.rotCos > 0) {
-        x1 = MIN_CELL;
-        x2 = MAX_CELL + 1;
-        xd = 1;
-    } else {
-        x2 = MIN_CELL - 1;
-        x1 = MAX_CELL;
-        xd = -1;
-    }
-
-    if(Renderer::camera.rotSin < 0) {
-        y1 = MIN_CELL;
-        y2 = MAX_CELL + 1;
-        yd = 1;
-    } else {
-        y2 = MIN_CELL - 1;
-        y1 = MAX_CELL;
-        yd = -1;
-    }
-
-    auto drawMenuCell = [&](int8_t x, int8_t y) {
-        if(!MENU_SOLID(x, y)) return;
-        if(Renderer::isFrustrumClipped(x, y)) return;
-        if(Renderer::numBufferSlicesFilled >= DISPLAY_WIDTH) return;
-
-        const bool blockedLeft = MENU_SOLID_SAFE(x - 1, y);
-        const bool blockedRight = MENU_SOLID_SAFE(x + 1, y);
-        const bool blockedUp = MENU_SOLID_SAFE(x, y - 1);
-        const bool blockedDown = MENU_SOLID_SAFE(x, y + 1);
-
-        int16_t wx1 = (int16_t)(x * CELL_SIZE);
-        int16_t wy1 = (int16_t)(y * CELL_SIZE);
-        int16_t wx2 = (int16_t)(wx1 + CELL_SIZE);
-        int16_t wy2 = (int16_t)(wy1 + CELL_SIZE);
-
-        if(!blockedLeft && Renderer::camera.x < wx1) {
-#if WITH_TEXTURES
-            Renderer::DrawWall(
-                texture,
-                wx1,
-                wy1,
-                wx1,
-                wy2,
-                !blockedUp && Renderer::camera.y > wy1,
-                !blockedDown && Renderer::camera.y < wy2,
-                false);
-#else
-            Renderer::DrawWall(
-                wx1,
-                wy1,
-                wx1,
-                wy2,
-                !blockedUp && Renderer::camera.y > wy1,
-                !blockedDown && Renderer::camera.y < wy2,
-                false);
-#endif
-        }
-
-        if(!blockedDown && Renderer::camera.y > wy2) {
-#if WITH_TEXTURES
-            Renderer::DrawWall(
-                texture,
-                wx1,
-                wy2,
-                wx2,
-                wy2,
-                !blockedLeft && Renderer::camera.x > wx1,
-                !blockedRight && Renderer::camera.x < wx2,
-                false);
-#else
-            Renderer::DrawWall(
-                wx1,
-                wy2,
-                wx2,
-                wy2,
-                !blockedLeft && Renderer::camera.x > wx1,
-                !blockedRight && Renderer::camera.x < wx2,
-                false);
-#endif
-        }
-
-        if(!blockedRight && Renderer::camera.x > wx2) {
-#if WITH_TEXTURES
-            Renderer::DrawWall(
-                texture,
-                wx2,
-                wy2,
-                wx2,
-                wy1,
-                !blockedDown && Renderer::camera.y < wy2,
-                !blockedUp && Renderer::camera.y > wy1,
-                false);
-#else
-            Renderer::DrawWall(
-                wx2,
-                wy2,
-                wx2,
-                wy1,
-                !blockedDown && Renderer::camera.y < wy2,
-                !blockedUp && Renderer::camera.y > wy1,
-                false);
-#endif
-        }
-
-        if(!blockedUp && Renderer::camera.y < wy1) {
-#if WITH_TEXTURES
-            Renderer::DrawWall(
-                texture,
-                wx2,
-                wy1,
-                wx1,
-                wy1,
-                !blockedRight && Renderer::camera.x < wx2,
-                !blockedLeft && Renderer::camera.x > wx1,
-                false);
-#else
-            Renderer::DrawWall(
-                wx2,
-                wy1,
-                wx1,
-                wy1,
-                !blockedRight && Renderer::camera.x < wx2,
-                !blockedLeft && Renderer::camera.x > wx1,
-                false);
-#endif
-        }
-    };
-
-    if(ABS(Renderer::camera.rotCos) < ABS(Renderer::camera.rotSin)) {
-        for(int8_t y = y1; y != y2; y += yd) {
-            for(int8_t x = x1; x != x2; x += xd) {
-                drawMenuCell(x, y);
-            }
-        }
-    } else {
-        for(int8_t x = x1; x != x2; x += xd) {
-            for(int8_t y = y1; y != y2; y += yd) {
-                drawMenuCell(x, y);
-            }
+        const uint8_t x = kStarX[i];
+        const uint8_t y = kStarY[i];
+        Platform::PutPixel(x, y, COLOUR_WHITE);
+        if(stage == 5) {
+            const uint8_t r = kStarRadius[i];
+            if(x >= r) Platform::PutPixel((uint8_t)(x - r), y, COLOUR_WHITE);
+            if(x + r < DISPLAY_WIDTH) Platform::PutPixel((uint8_t)(x + r), y, COLOUR_WHITE);
+            if(y >= r) Platform::PutPixel(x, (uint8_t)(y - r), COLOUR_WHITE);
+            if(y + r < DISPLAY_HEIGHT) Platform::PutPixel(x, (uint8_t)(y + r), COLOUR_WHITE);
         }
     }
 
-#undef MENU_SOLID_SAFE
-#undef MENU_SOLID
+    const uint8_t menuBottomH = pgm_read_byte(&menuBottomSpriteData[1]);
+    Platform::DrawSprite(0, DISPLAY_HEIGHT - menuBottomH, menuBottomSpriteData, 0);
+}
+
+uint8_t GetSpriteWidth(const uint8_t* sprite) {
+    return pgm_read_byte(&sprite[0]);
+}
+
+void DrawMainMenuBackground() {
+    DrawMenuRoom();
+
+    const uint8_t logoW = GetSpriteWidth(logoSpriteData);
+    const uint8_t logoX = (uint8_t)((DISPLAY_WIDTH - logoW) / 2);
+    const uint8_t logoY = 5;
+    Platform::DrawSprite(logoX, logoY, logoSpriteData, 0);
 }
 }
 
 void Menu::Draw() {
-    DrawMenuRoom();
+    DrawMainMenuBackground();
+    PrintItem(0, 0);
+    PrintItem(1, 0);
 
-    if (splashActive) {
-        Font::PrintString(PSTR("FLIPPER GAME"), 2, 42, COLOUR_WHITE);
-        Font::PrintString(PSTR("JHHOWARD & APFXTECH"), 4, 26, COLOUR_WHITE);
-        Font::PrintString(PSTR("PRESENT"), 6, 52, COLOUR_WHITE);
-        return;
-    }
-
-    Font::PrintString(PSTR("CATACOMBS OF THE DAMNED"), 2, 18, COLOUR_WHITE);
-
-    for (uint8_t row = 0; row < VISIBLE_ROWS; ++row) {
-        uint8_t idx = (uint8_t)(m_topIndex + row);
-        if (idx >= MENU_ITEMS_COUNT) break;
-        PrintItem(idx, (uint8_t)(MENU_FIRST_ROW + row));
-    }
-
-    static uint8_t bubble = 0;
-    static uint16_t lastFrameSeen = 0xFFFF;
-
-    const uint16_t frame = (uint16_t)Game::globalTickFrame;
-
-    if (frame != lastFrameSeen) {
-        if ((frame & SHIFT_MASK) == 0) {
-            bubble = (uint8_t)(bubble + 2);
-            if (bubble >= kObjectsCount) bubble = (uint8_t)(bubble - kObjectsCount);
-            if (bubble >= kObjectsCount) bubble = (uint8_t)(bubble - kObjectsCount);
-        }
-        lastFrameSeen = frame;
-    }
-
-    const uint8_t num1 = bubble;
-    uint8_t num2 = (uint8_t)(bubble + 1);
-    if (num2 >= kObjectsCount) num2 = 0;
-
-    const ObjDesc& sprite1 = kObjects[num1];
-    const ObjDesc& sprite2 = kObjects[num2];
-
-    const int animOffset = ((Game::globalTickFrame & 8) == 0) ? 32 : 0;
-    const int off1 = sprite1.animated ? animOffset : 0;
-    const int off2 = sprite2.animated ? animOffset : 0;
-
-    const uint16_t* torchSprite =
-        (Game::globalTickFrame & 4) ? torchSpriteData1 : torchSpriteData2;
-
-    if (sprite1.invert) {
-        Renderer::DrawScaled(sprite1.sprite + off1, 66, 29, 9, 255, true, COLOUR_BLACK);
-    } else {
-        Renderer::DrawScaled(sprite1.sprite + off1, 66, 29, 9, 255);
-    }
-
-    if (sprite2.invert) {
-        Renderer::DrawScaled(sprite2.sprite + off2, 96, 30, 9, 255, true, COLOUR_BLACK);
-    } else {
-        Renderer::DrawScaled(sprite2.sprite + off2, 96, 30, 9, 255);
-    }
-
-    Renderer::DrawScaled(torchSprite, 0, 10, 9, 255);
-    Renderer::DrawScaled(torchSprite, DISPLAY_WIDTH - 18, 10, 9, 255);
-
-    Font::PrintInt(m_save[sprite1.varsIndex], MENU_FIRST_ROW + 1, 86, COLOUR_WHITE);
-    Font::PrintInt(m_save[sprite2.varsIndex], MENU_FIRST_ROW + 1, 116, COLOUR_WHITE);
-
-    Font::PrintString(PSTR(">"), (uint8_t)(MENU_FIRST_ROW + m_cursorPos), CURSOR_X, COLOUR_WHITE);
+    const uint8_t cursorX = (m_selection == 0) ? (uint8_t)(MENU_START_X - CURSOR_OFFSET_X) :
+                                               (uint8_t)(MENU_SOUND_X - CURSOR_OFFSET_X);
+    Platform::DrawSprite(cursorX, MENU_LINE_Y + CURSOR_OFFSET_Y, skullSpriteData, 0);
 }
 
 void Menu::PrintItem(uint8_t idx, uint8_t row) {
+    (void)row;
     switch(idx) {
     case 0:
-        Font::PrintString(PSTR("Play"), row, TEXT_X, COLOUR_WHITE);
+        Font::PrintString(PSTR("START"), MENU_LINE, MENU_START_X, COLOUR_WHITE);
         break;
     case 1:
-        Font::PrintString(PSTR("Sound:"), row, TEXT_X, COLOUR_WHITE);
+        Font::PrintString(PSTR("SOUND"), MENU_LINE, MENU_SOUND_X, COLOUR_WHITE);
         Font::PrintString(
-            Platform::IsAudioEnabled() ? PSTR("on") : PSTR("off"), row, TEXT_X + 28, COLOUR_WHITE);
-        break;
-    case 2:
-        Font::PrintString(PSTR("Score:"), row, TEXT_X, COLOUR_WHITE);
-        Font::PrintInt(m_score, row, TEXT_X + 28, COLOUR_WHITE);
-        break;
-    case 3:
-        Font::PrintString(PSTR("High:"), row, TEXT_X, COLOUR_WHITE);
-        Font::PrintInt(m_high, row, TEXT_X + 28, COLOUR_WHITE);
+            Platform::IsAudioEnabled() ? PSTR("ON") : PSTR("OFF"),
+            MENU_LINE,
+            MENU_SOUND_X + 21,
+            COLOUR_WHITE);
         break;
     }
 }
@@ -380,9 +116,6 @@ void Menu::Init() {
     m_selection = 0;
     m_topIndex = 0;
     m_cursorPos = 0;
-
-    splashTimer = 0;
-    splashActive = true;
 }
 
 void Menu::DrawEnteringLevel() {
@@ -517,69 +250,18 @@ void Menu::Tick() {
     static uint8_t lastInput = 0;
     uint8_t input = Platform::GetInput();
 
-    if(splashActive) {
-        if(splashTimer < SPLASH_TIME_TICKS) splashTimer++;
-        if(splashTimer >= SPLASH_TIME_TICKS) splashActive = false;
-        lastInput = input;
-        return;
+    if(((input & INPUT_RIGHT) && !(lastInput & INPUT_RIGHT)) ||
+       ((input & INPUT_DOWN) && !(lastInput & INPUT_DOWN))) {
+        m_selection = Wrap((int)m_selection + 1, MENU_ITEMS_COUNT);
     }
 
-    auto syncWindow = [&]() {
-        uint8_t maxTop = MaxTop();
-
-        if(m_selection < m_topIndex) m_topIndex = m_selection;
-
-        uint8_t end = (uint8_t)(m_topIndex + (VISIBLE_ROWS - 1));
-        if(m_selection > end) {
-            int t = (int)m_selection - (VISIBLE_ROWS - 1);
-            if(t < 0) t = 0;
-            if(t > maxTop) t = maxTop;
-            m_topIndex = (uint8_t)t;
-        }
-
-        m_cursorPos = (uint8_t)(m_selection - m_topIndex);
-        if(m_cursorPos >= VISIBLE_ROWS) m_cursorPos = (VISIBLE_ROWS - 1);
-    };
-
-    if((input & INPUT_DOWN) && !(lastInput & INPUT_DOWN)) {
-        uint8_t next = Wrap((int)m_selection + 1, MENU_ITEMS_COUNT);
-
-        if(m_cursorPos < (VISIBLE_ROWS - 1)) {
-            m_selection = next;
-            m_cursorPos++;
-        } else {
-            m_selection = next;
-
-            if(m_topIndex < MaxTop()) {
-                m_topIndex++;
-            } else {
-                m_topIndex = 0;
-                m_cursorPos = 0;
-            }
-        }
-
-        syncWindow();
+    if(((input & INPUT_LEFT) && !(lastInput & INPUT_LEFT)) ||
+       ((input & INPUT_UP) && !(lastInput & INPUT_UP))) {
+        m_selection = Wrap((int)m_selection - 1, MENU_ITEMS_COUNT);
     }
 
-    if((input & INPUT_UP) && !(lastInput & INPUT_UP)) {
-        uint8_t prev = Wrap((int)m_selection - 1, MENU_ITEMS_COUNT);
-
-        if(m_cursorPos > 0) {
-            m_selection = prev;
-            m_cursorPos--;
-        } else {
-            m_selection = prev;
-
-            if(m_topIndex > 0) {
-                m_topIndex--;
-            } else {
-                m_topIndex = MaxTop();
-                m_cursorPos = (VISIBLE_ROWS - 1);
-            }
-        }
-
-        syncWindow();
-    }
+    m_topIndex = 0;
+    m_cursorPos = m_selection;
 
     if((input & (INPUT_A | INPUT_B)) && !(lastInput & (INPUT_A | INPUT_B))) {
         switch(m_selection) {

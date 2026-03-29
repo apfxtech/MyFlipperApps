@@ -14,6 +14,8 @@
 Player Game::player;
 const char* Game::displayMessage = nullptr;
 uint8_t Game::displayMessageTime = 0;
+CellType Game::hudPickupIcon = CellType::Empty;
+uint8_t Game::hudPickupIconTime = 0;
 Game::State Game::state = Game::State::Menu;
 uint8_t Game::floor = 1;
 uint8_t Game::globalTickFrame = 0;
@@ -55,6 +57,14 @@ void Game::ShowMessage(const char* message) {
 
     displayMessage = message;
     displayMessageTime = messageDisplayTime;
+}
+
+void Game::ShowPickup(CellType cellType, const char* message) {
+    constexpr uint8_t pickupIconDisplayTime = 60;
+
+    ShowMessage(message);
+    hudPickupIcon = cellType;
+    hudPickupIconTime = pickupIconDisplayTime;
 }
 
 void Game::NextLevel() {
@@ -109,6 +119,10 @@ void Game::TickInGame() {
     if(displayMessageTime > 0) {
         displayMessageTime--;
         if(displayMessageTime == 0) displayMessage = nullptr;
+    }
+    if(hudPickupIconTime > 0) {
+        hudPickupIconTime--;
+        if(hudPickupIconTime == 0) hudPickupIcon = CellType::Empty;
     }
 
     player.Tick();

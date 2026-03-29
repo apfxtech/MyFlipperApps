@@ -33,6 +33,10 @@ int16_t Renderer::viewCenterX = DISPLAY_WIDTH / 2;
 int16_t Renderer::nearPlane = DISPLAY_WIDTH * NEAR_PLANE_MULTIPLIER / 256;
 namespace {
 constexpr uint8_t kMinWallDrawDistance = 3;
+constexpr int16_t kSidebarMapX = 2;
+constexpr int16_t kSidebarMapY = DISPLAY_HEIGHT - 16 - 2;
+constexpr int16_t kSidebarMapWidth = 19;
+constexpr int16_t kSidebarMapHeight = 16;
 
 void DrawTiltedSprite(int16_t x, int16_t y, const uint8_t* bmp, int8_t skew, bool invert = false) {
     if(!bmp) return;
@@ -143,6 +147,126 @@ void DrawGameWindowMask() {
     Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 3), DISPLAY_HEIGHT - 2, COLOUR_BLACK);
     Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), DISPLAY_HEIGHT - 2, COLOUR_BLACK);
     Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), DISPLAY_HEIGHT - 3, COLOUR_BLACK);
+
+    for(int16_t x = GAME_VIEW_X + 3; x <= GAME_VIEW_RIGHT - 4; x++) {
+        Platform::PutPixel((uint8_t)x, 1, COLOUR_WHITE);
+        Platform::PutPixel((uint8_t)x, DISPLAY_HEIGHT - 2, COLOUR_WHITE);
+    }
+
+    for(int16_t y = 4; y <= DISPLAY_HEIGHT - 4; y++) {
+        Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), (uint8_t)y, COLOUR_WHITE);
+        Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), (uint8_t)y, COLOUR_WHITE);
+    }
+
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 3), 1, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 2), 2, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), 3, COLOUR_WHITE);
+
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 4), 1, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 3), 2, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), 3, COLOUR_WHITE);
+
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 3), DISPLAY_HEIGHT - 2, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 2), DISPLAY_HEIGHT - 3, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_X + 1), DISPLAY_HEIGHT - 4, COLOUR_WHITE);
+
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 4), DISPLAY_HEIGHT - 2, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 3), DISPLAY_HEIGHT - 3, COLOUR_WHITE);
+    Platform::PutPixel((uint8_t)(GAME_VIEW_RIGHT - 2), DISPLAY_HEIGHT - 4, COLOUR_WHITE);
+}
+
+void FillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint8_t colour) {
+    for(int16_t py = y; py < y + h; py++) {
+        for(int16_t px = x; px < x + w; px++) {
+            Platform::PutPixel((uint8_t)px, (uint8_t)py, colour);
+        }
+    }
+}
+
+const uint16_t* GetPickupIconSprite(CellType cellType) {
+    switch(cellType) {
+    case CellType::Potion:
+        return potionSpriteData;
+    case CellType::Coins:
+        return coinsSpriteData;
+    case CellType::Crown:
+        return crownSpriteData;
+    case CellType::Scroll:
+        return scrollSpriteData;
+    default:
+        return nullptr;
+    }
+}
+
+void DrawPickupIcon(const uint16_t* spriteData) {
+    if(!spriteData) return;
+
+    const int16_t boxCenterX = kSidebarMapX + kSidebarMapWidth / 2;
+    const int16_t boxCenterY = kSidebarMapY + kSidebarMapHeight / 2;
+    constexpr uint8_t halfSize = 8;
+    const int16_t oldViewX = Renderer::viewX;
+    const int16_t oldViewWidth = Renderer::viewWidth;
+    const int16_t oldViewRight = Renderer::viewRight;
+    const int16_t oldViewCenterX = Renderer::viewCenterX;
+    const int16_t oldNearPlane = Renderer::nearPlane;
+    uint8_t savedBuffer[kSidebarMapWidth];
+
+    for(uint8_t i = 0; i < kSidebarMapWidth; i++) {
+        savedBuffer[i] = Renderer::wBuffer[kSidebarMapX + i];
+        Renderer::wBuffer[kSidebarMapX + i] = 0;
+    }
+
+    Renderer::SetFullScreenViewport();
+    Renderer::DrawScaled(
+        spriteData,
+        (int8_t)(boxCenterX - halfSize),
+        (int8_t)(boxCenterY - halfSize),
+        halfSize,
+        255,
+        false,
+        COLOUR_WHITE);
+
+    for(uint8_t i = 0; i < kSidebarMapWidth; i++) {
+        Renderer::wBuffer[kSidebarMapX + i] = savedBuffer[i];
+    }
+    Renderer::viewX = oldViewX;
+    Renderer::viewWidth = oldViewWidth;
+    Renderer::viewRight = oldViewRight;
+    Renderer::viewCenterX = oldViewCenterX;
+    Renderer::nearPlane = oldNearPlane;
+}
+
+void DrawSidebarMinimap() {
+    FillRect(kSidebarMapX, kSidebarMapY, kSidebarMapWidth, kSidebarMapHeight, COLOUR_WHITE);
+
+    const uint8_t playerCellX = Game::player.x / CELL_SIZE;
+    const uint8_t playerCellY = Game::player.y / CELL_SIZE;
+    const uint8_t startCellX = playerCellX - kSidebarMapWidth / 2;
+    const uint8_t startCellY = playerCellY - kSidebarMapHeight / 2;
+
+    for(uint8_t outX = 0; outX < kSidebarMapWidth; outX++) {
+        for(uint8_t outY = 0; outY < kSidebarMapHeight; outY++) {
+            const uint8_t cellX = startCellX + outX;
+            const uint8_t cellY = startCellY + outY;
+            const bool isPlayer = (cellX == playerCellX) && (cellY == playerCellY);
+            const uint8_t colour =
+                isPlayer ? ((Game::globalTickFrame & 3) ? COLOUR_BLACK : COLOUR_WHITE) :
+                           (cellX < Map::width && cellY < Map::height && Map::IsSolid(cellX, cellY) ?
+                                COLOUR_BLACK :
+                                COLOUR_WHITE);
+            Platform::PutPixel(
+                (uint8_t)(kSidebarMapX + outX), (uint8_t)(kSidebarMapY + outY), colour);
+        }
+    }
+}
+
+void DrawSidebarPanel() {
+    FillRect(kSidebarMapX, kSidebarMapY, kSidebarMapWidth, kSidebarMapHeight, COLOUR_WHITE);
+    if(Game::hudPickupIconTime > 0) {
+        DrawPickupIcon(GetPickupIconSprite(Game::hudPickupIcon));
+    } else {
+        DrawSidebarMinimap();
+    }
 }
 
 void DrawGameOverlayFrame() {
@@ -1237,9 +1361,9 @@ void Renderer::DrawHUD() {
         aimSkew,
         invertAim);
     Platform::DrawSprite(0, 0, avatarSpriteData, 0);
+    DrawSidebarPanel();
     DrawPixelNumber(11, 23, Game::player.hp, COLOUR_WHITE);
     DrawPixelNumber(11, 35, Game::player.mana, COLOUR_WHITE);
-    if(Game::displayMessage) Font::PrintString(Game::displayMessage, 0, viewX);
 }
 void Renderer::Render() {
     SetGameViewport();

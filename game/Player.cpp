@@ -214,25 +214,25 @@ void Player::Tick()
 				hp += potionStrength;
 			Map::SetCell(cellX, cellY, CellType::Empty);
 			Platform::PlaySound(Sounds::Pickup);
-			Game::ShowMessage(PSTR("Drank a potion of healing"));
+			Game::ShowPickup(CellType::Potion, PSTR("Drank a potion of healing"));
 		}
 		break;
 	case CellType::Coins:
 		Map::SetCell(cellX, cellY, CellType::Empty);
 		Platform::PlaySound(Sounds::Pickup);
-		Game::ShowMessage(PSTR("Found some gold coins"));
+		Game::ShowPickup(CellType::Coins, PSTR("Found some gold coins"));
 		Game::stats.coinsCollected++;
 		break;
 	case CellType::Crown:
 		Map::SetCell(cellX, cellY, CellType::Empty);
 		Platform::PlaySound(Sounds::Pickup);
-		Game::ShowMessage(PSTR("Found a jewel encrusted crown"));
+		Game::ShowPickup(CellType::Crown, PSTR("Found a jewel encrusted crown"));
 		Game::stats.crownsCollected++;
 		break;
 	case CellType::Scroll:
 		Map::SetCell(cellX, cellY, CellType::Empty);
 		Platform::PlaySound(Sounds::Pickup);
-		Game::ShowMessage(PSTR("Found an ancient scroll"));
+		Game::ShowPickup(CellType::Scroll, PSTR("Found an ancient scroll"));
 		Game::stats.scrollsCollected++;
 		break;
 	default:
