@@ -58,6 +58,7 @@ public:
     static CellType hudPickupIcon;
     static uint8_t hudPickupIconTime;
     static uint8_t floor;
+    static uint16_t levelThemeSeed;
 
     static Stats stats;
 

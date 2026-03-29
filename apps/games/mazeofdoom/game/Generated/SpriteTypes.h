@@ -62,6 +62,8 @@ extern const uint8_t aimSpriteData[];
 extern const uint8_t avatarSpriteData[];
 // Generated from Images/background_bottom.png
 extern const uint8_t backgroundBottomSpriteData[];
+// Generated from Images/background_bottom_dark.png
+extern const uint8_t backgroundBottomDarkSpriteData[];
 // Generated from Images/background_top.png
 extern const uint8_t backgroundTopSpriteData[];
 // Generated from Images/logo.png

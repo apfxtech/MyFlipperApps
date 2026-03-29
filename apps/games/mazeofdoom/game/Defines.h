@@ -52,6 +52,9 @@ static inline const void* pgm_read_ptr_safe(const void* p) {
 
 // Game settings
 #define DEV_MODE 0
+#ifndef LEVEL_THEME_DAY
+#define LEVEL_THEME_DAY 0
+#endif
 
 // Input definitions
 #define INPUT_LEFT 1
@@ -86,7 +89,7 @@ static inline const void* pgm_read_ptr_safe(const void* p) {
 #define BASE_SPRITE_SIZE 16
 #define MAX_SPRITE_SIZE (DISPLAY_HEIGHT / 2)
 #define MIN_TEXTURE_DISTANCE 4
-#define MAX_QUEUED_DRAWABLES 12
+#define MAX_QUEUED_DRAWABLES 24
 
 // Player settings
 #define TURN_SPEED 3
