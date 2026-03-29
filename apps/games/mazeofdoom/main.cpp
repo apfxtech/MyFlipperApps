@@ -87,8 +87,10 @@ static void input_events_callback(const void* value, void* ctx) {
     case InputKeyBack:
         if((event->type == InputTypePress) || (event->type == InputTypeRepeat)) {
             (void)__atomic_store_n(&s_back_pressed, 1, __ATOMIC_RELAXED);
+            bit = INPUT_A;
         } else if(event->type == InputTypeRelease) {
             (void)__atomic_store_n(&s_back_pressed, 0, __ATOMIC_RELAXED);
+            bit = INPUT_A;
         }
         break;
     default:
@@ -159,6 +161,7 @@ extern "C" int32_t arduboy3d_app(void* p) {
 
         bool back_was_pressed = false;
         bool back_hold_fired = false;
+        bool back_exit_armed = true;
         uint32_t back_press_tick = 0;
 
         while(!st->exit_requested) {
@@ -178,19 +181,28 @@ extern "C" int32_t arduboy3d_app(void* p) {
             next_tick += period_ticks;
 
             const bool back_pressed = (__atomic_load_n(&s_back_pressed, __ATOMIC_RELAXED) != 0);
+            const uint8_t input_state = __atomic_load_n(&st->input_state, __ATOMIC_RELAXED);
+            const bool side_pressed = (input_state & (INPUT_LEFT | INPUT_RIGHT)) != 0;
 
             // BACK hold logic
             if(!back_pressed) {
                 back_was_pressed = false;
                 back_hold_fired = false;
+                back_exit_armed = true;
             } else {
                 if(!back_was_pressed) {
                     back_was_pressed = true;
                     back_press_tick = now;
                     back_hold_fired = false;
+                    back_exit_armed = true;
                 }
 
-                if(!back_hold_fired && ((uint32_t)(now - back_press_tick) >= hold_ticks)) {
+                if(side_pressed) {
+                    back_exit_armed = false;
+                }
+
+                if(back_exit_armed && !back_hold_fired &&
+                   ((uint32_t)(now - back_press_tick) >= hold_ticks)) {
                     back_hold_fired = true;
                     if(Game::InMenu())
                         st->exit_requested = true;

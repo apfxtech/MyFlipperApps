@@ -263,7 +263,7 @@ void Menu::Tick() {
     m_topIndex = 0;
     m_cursorPos = m_selection;
 
-    if((input & (INPUT_A | INPUT_B)) && !(lastInput & (INPUT_A | INPUT_B))) {
+    if((input & INPUT_B) && !(lastInput & INPUT_B)) {
         switch(m_selection) {
         case 0:
             Game::StartGame();
@@ -292,7 +292,7 @@ void Menu::TickGameOver() {
 
     if(timer < minShowTime) timer++;
 
-    if(timer == minShowTime && (Platform::GetInput() & (INPUT_A | INPUT_B))) {
+    if(timer == minShowTime && (Platform::GetInput() & INPUT_B)) {
         timer++;
     } else if(timer == minShowTime + 1 && Platform::GetInput() == 0) {
         Game::SwitchState(Game::State::Menu);
