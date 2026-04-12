@@ -1,9 +1,9 @@
 [submodule "apps/games/microcity/lib"]
 	path = apps/games/microcity/lib
-	url = https://github.com/apfxtech/arduboylib.git
+	url = https://git.aperturefox.ru/FlipperZero/ardulib.git
 [submodule "apps/games/microtd/lib"]
 	path = apps/games/microtd/lib
-	url = https://github.com/apfxtech/arduboylib.git
+	url = https://git.aperturefox.ru/FlipperZero/ardulib.git
 [submodule "apps/games/arduventure/lib"]
 	path = apps/games/arduventure/lib
-	url = https://github.com/apfxtech/arduboylib.git
+	url = https://git.aperturefox.ru/FlipperZero/ardulib.git
