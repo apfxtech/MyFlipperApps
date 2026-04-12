@@ -1,0 +1,35 @@
+Ideas for improvements
+
+* double bars "riddle" is too hard/frustrating and lacks logic, perhaps add a third switch for amusement instead
+* fix lighting anomaly for front wall in distance 1 (shouldn't be dithered)
+* remove heart symbol if player is dead (this requires rework of the frame, as the frame starts at y = 24...)
+* dynamic lighting range for torch or lamp? breathing view distance?
+* use and improve dynamic lighting for objects (use offset of -2 for more clarity?)
+* display damage dealt/received on screen
+  - perhaps comic like with spikes (*POW*)
+  - monster inflicted damage right near the players HP
+  - player inflicted damage central on the dungeon screen
+  - mask required (bitmap is 24x24 -> 144 bytes required )
+  - font is 7x3, 30 bytes required (probably 40 bytes to simplify adressing)
+
+Done
++ scale hit points by 2 (again)
++ add version info to panel (to the graphics of course
++ dynamic lighting effect not hardcoded, but using a table with 2 mask bytes per distance (8 bytes in total + 8 bytes for fading in and out)
+  + on game start fade in
+  + on player death fade to black
+
+
+Ideas for better rendering (requires masks for all wall objects)
+
+* fill the line buffer with the background image
+* render every visible wall and object from distant to close (add lighting effects as required)
+
+
+What if we can't use masks?
+
+* background image will be
+  * replaced if a pixel in the wall byte is set
+  * merged if a pixel is set, making the ceiling and floor visible to empty pixels in the walls
+  * rectangular walls don't require masks
+  * diagonal walls would require masks
