@@ -21,7 +21,6 @@ Build details:
 - Firmware version:     $FW_VERSION
 - Firmware API:         $API_VERSION
 
-${CHANGELOG:-}
 EOF
 
 if gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
