@@ -24,7 +24,8 @@ jobs:
           repository: flipperdevices/flipperzero-firmware
           ref: release
           path: firmware
-          fetch-depth: 0
+          fetch-depth: 1
+          fetch-tags: false
           submodules: recursive
 
       - name: Checkout applications repository
@@ -32,7 +33,8 @@ jobs:
         with:
           repository: apfxtech/MyFlipperApps
           path: repo
-          fetch-depth: 0
+          fetch-depth: 1
+          fetch-tags: false
           submodules: recursive
 
       - name: Search and edit manifests
