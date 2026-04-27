@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build-and-release:
-    if: ${{ github.server_url != 'https://github.com' }}
+    if: ${{ github.server_url == 'https://git.aperturefox.ru' }}
     runs-on: ubuntu-latest
 
     steps:

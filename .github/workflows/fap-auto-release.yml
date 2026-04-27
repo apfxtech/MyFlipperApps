@@ -3,7 +3,7 @@ name: FAP Build & Auto Release
 on:
   push:
     tags:
-      - 'build-*'
+      - 'b*'
 
 permissions:
   contents: write
