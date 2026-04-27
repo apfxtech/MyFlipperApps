@@ -2,60 +2,50 @@
 set -euo pipefail
 
 FIRMWARE_DIR="${1:?firmware dir is required}"
-TAGS_API_URL="${TAGS_API_URL:-https://git.aperturefox.ru/api/v1/repos/FlipperZero/unleashed-firmware/tags}"
 
 cd "$FIRMWARE_DIR"
 
 HEAD_SHA="$(git rev-parse HEAD)"
 FW_VERSION=""
 
-fetch_tag_from_api() {
-  local response
-  local -a curl_args
-  curl_args=(
-    --silent
-    --show-error
-    --fail
-    "$TAGS_API_URL"
-  )
+find_remote_tag_for_head() {
+  local refs
 
-  if [ -n "${FORGEJO_TOKEN:-}" ]; then
-    curl_args=(
-      --silent
-      --show-error
-      --fail
-      --header "Authorization: token ${FORGEJO_TOKEN}"
-      "$TAGS_API_URL"
-    )
-  fi
+  refs="$(git ls-remote --tags origin 2>/dev/null)" || return 1
 
-  response="$(curl "${curl_args[@]}")" || return 1
-
-  printf '%s' "$response" | python3 -c '
-import json
+  printf '%s\n' "$refs" | python3 -c '
 import sys
 
 head_sha = sys.argv[1].strip().lower()
+matches = []
 
-try:
-    tags = json.load(sys.stdin)
-except Exception:
+for raw_line in sys.stdin:
+    line = raw_line.strip()
+    if not line:
+        continue
+    parts = line.split()
+    if len(parts) != 2:
+        continue
+    sha, ref = parts
+    if sha.strip().lower() != head_sha:
+        continue
+    if not ref.startswith("refs/tags/"):
+        continue
+    name = ref[len("refs/tags/"):]
+    if name.endswith("^{}"):
+        name = name[:-3]
+    if name:
+        matches.append(name)
+
+if not matches:
     sys.exit(1)
 
-for tag in tags:
-    commit = (tag or {}).get("commit") or {}
-    sha = (commit.get("sha") or tag.get("id") or "").strip().lower()
-    if sha == head_sha:
-        name = (tag.get("name") or "").strip()
-        if name:
-            print(name)
-            sys.exit(0)
-
-sys.exit(1)
+matches.sort()
+print(matches[-1])
 ' "$HEAD_SHA"
 }
 
-FW_VERSION="$(fetch_tag_from_api || true)"
+FW_VERSION="$(find_remote_tag_for_head || true)"
 
 if [ -z "$FW_VERSION" ]; then
   FW_VERSION="$(git tag --points-at HEAD | head -n 1 || true)"

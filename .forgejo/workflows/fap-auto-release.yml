@@ -49,8 +49,6 @@ jobs:
       - name: Extract firmware metadata
         id: firmware-meta
         shell: bash
-        env:
-          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
         run: |
           set -euo pipefail
           bash repo/.forgejo/scripts/firmware_meta.sh firmware
