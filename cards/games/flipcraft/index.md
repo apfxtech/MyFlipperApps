@@ -1,8 +1,17 @@
 # title
-FlipCraft
+Flipcraft
 
 # url
-https://github.com/apfxtech/MyFlipperApps
+https://github.com/apfxtech/Flipcraft.git
 
 # text
-Игра для Flipper Zero.
+Flipcraft is a real voxel survival sandbox for Flipper Zero
+
+# version
+2.1
+
+# api
+87.11
+
+# download
+https://github.com/apfxtech/MyFlipperApps/releases/download/t2/flipcraft.fap
