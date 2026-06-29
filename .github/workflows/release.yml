@@ -10,25 +10,18 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
-    name: Build and publish release
+  release:
+    if: ${{ github.server_url == 'https://github.com' }}
+    name: Build apps, update catalog and publish release
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check GitHub status
-        run: |
-          indicator=$(curl -sf https://www.githubstatus.com/api/v2/status.json | python3 -c "import sys, json; print(json.load(sys.stdin)['status']['indicator'])")
-          echo "GitHub status: $indicator"
-          if [ "$indicator" = "major" ] || [ "$indicator" = "critical" ]; then
-            echo "GitHub is having an outage, aborting."
-            exit 1
-          fi
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          ref: main
           fetch-depth: 0
+          submodules: recursive
 
       - name: Set up ufbt SDK (dev channel)
         uses: flipperdevices/flipperzero-ufbt-action@v0.1
@@ -37,26 +30,25 @@ jobs:
           sdk-channel: dev
           sdk-index-url: https://up.unleashedflip.com/directory.json
 
-      - name: Build all apps
+      - name: Build apps and generate cards
+        run: python3 .github/scripts/build.py
+
+      - name: Commit cards
         run: |
-          mkdir -p artifacts
-          for dir in projects/*/*/ ; do
-            [ -f "${dir}application.fam" ] || continue
-            name="${dir%/}"
-            echo "::group::Build ${name}"
-            if ( cd "$dir" && ufbt ); then
-              find "$dir" -path '*/dist/*.fap' -exec cp {} artifacts/ \;
-            else
-              echo "::warning::Build failed for ${name}, skipping"
-            fi
-            echo "::endgroup::"
-          done
-          echo "Built artifacts:"
-          ls -la artifacts
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cards
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: update cards catalog [skip ci]"
+            git push origin HEAD:main
+          fi
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ github.ref_name }}
+          body_path: release_notes.md
           files: artifacts/*.fap
           fail_on_unmatched_files: true

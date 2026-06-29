@@ -94,6 +94,16 @@
       white-space: pre-line;
     }
 
+    .af-badges {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .af-badges .badge {
+      font-weight: 600;
+    }
+
     .af-btn-row {
       display: flex;
       gap: 0.5rem;
@@ -261,6 +271,9 @@
           title: sections.title || prettify(card.project),
           text: sections.text || sections.description || sections.about || "",
           url: sections.url || "",
+          download: sections.download || "",
+          version: sections.version || "",
+          api: sections.api || "",
           img: card.imgUrl,
           category: card.category
         };
@@ -298,14 +311,21 @@
       return Array.from(used).sort((a, b) => a.localeCompare(b, "ru"));
     }
 
-    function createButton(href) {
+    function createButton(href, label) {
       const a = document.createElement("a");
       a.href = href;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.className = "btn btn-secondary";
-      a.textContent = "Открыть";
+      a.textContent = label;
       return a;
+    }
+
+    function createBadge(text, className) {
+      const span = document.createElement("span");
+      span.className = "badge rounded-pill " + className;
+      span.textContent = text;
+      return span;
     }
 
     function createCard(item) {
@@ -334,6 +354,18 @@
         body.appendChild(title);
       }
 
+      if (item.version || item.api) {
+        const badges = document.createElement("div");
+        badges.className = "af-badges";
+        if (item.version) {
+          badges.appendChild(createBadge("v" + item.version, "text-bg-light"));
+        }
+        if (item.api) {
+          badges.appendChild(createBadge("API " + item.api, "text-bg-dark"));
+        }
+        body.appendChild(badges);
+      }
+
       if (item.text) {
         const text = document.createElement("p");
         text.className = "card-text";
@@ -341,10 +373,15 @@
         body.appendChild(text);
       }
 
-      if (item.url) {
+      if (item.url || item.download) {
         const btnRow = document.createElement("div");
         btnRow.className = "af-btn-row";
-        btnRow.appendChild(createButton(item.url));
+        if (item.url) {
+          btnRow.appendChild(createButton(item.url, "Открыть"));
+        }
+        if (item.download) {
+          btnRow.appendChild(createButton(item.download, "Скачать"));
+        }
         body.appendChild(btnRow);
       }
 
