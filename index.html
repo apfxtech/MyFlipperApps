@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ApertureFox Technology</title>
+  <link rel="stylesheet" href="./bootstrap/css/bootstrap.min.css" />
+  <style>
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      background-color: var(--bs-secondary);
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    .af-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-color: var(--bs-secondary);
+      background-image: url("./bootstrap/flat-mountains.svg");
+      background-repeat: no-repeat;
+      background-position: center top;
+      background-size: cover;
+      transform: translateZ(0);
+      will-change: auto;
+    }
+
+    .af-navbar {
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+      z-index: 1030;
+    }
+
+    .af-masonry {
+      column-gap: 1rem;
+      column-count: 1;
+      padding: 1rem;
+    }
+
+    @media (min-width: 576px) {
+      .af-masonry {
+        column-count: 2;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .af-masonry {
+        column-count: 3;
+      }
+    }
+
+    @media (min-width: 1400px) {
+      .af-masonry {
+        column-count: 4;
+      }
+    }
+
+    .af-masonry-item {
+      break-inside: avoid;
+      -webkit-column-break-inside: avoid;
+      page-break-inside: avoid;
+      margin-bottom: 1rem;
+    }
+
+    .af-card {
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+
+    .af-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .af-card .card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .af-card .card-title {
+      margin-bottom: 0;
+    }
+
+    .af-card .card-text {
+      margin-bottom: 0;
+      white-space: pre-line;
+    }
+
+    .af-btn-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .af-btn-row .btn {
+      flex: 1 1 0;
+      min-width: 120px;
+      border-radius: 0.75rem;
+    }
+
+    .navbar-nav .nav-link {
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="af-bg"></div>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-secondary af-navbar">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-semibold" href="#" data-category="all">ApertureFox Technology</a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+        aria-controls="mainNavbar" aria-expanded="false" aria-label="Переключить навигацию">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNavbar">
+        <ul class="navbar-nav ms-auto" id="categoryNav"></ul>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div id="cards" class="af-masonry"></div>
+  </main>
+
+  <script src="./bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const CONFIG = {
+      owner: "apfxtech",
+      repo: "MyFlipperApps",
+      branch: "main",
+      cardsDir: "cards"
+    };
+
+    const IMG_EXTENSIONS = ["gif", "png", "webp", "jpg", "jpeg", "svg", "avif"];
+
+    const state = {
+      items: [],
+      categoryMap: {},
+      activeCategory: "all"
+    };
+
+    function detectRepo() {
+      let { owner, repo, branch } = CONFIG;
+      const host = location.hostname;
+      const segments = location.pathname.split("/").filter(Boolean);
+
+      if (!owner && host.endsWith(".github.io")) {
+        owner = host.replace(".github.io", "");
+      }
+      if (!repo) {
+        if (segments.length) {
+          repo = segments[0];
+        } else if (owner) {
+          repo = owner + ".github.io";
+        }
+      }
+
+      return { owner, repo, branch: branch || "main" };
+    }
+
+    function rawUrl(owner, repo, branch, path) {
+      const encoded = path.split("/").map(encodeURIComponent).join("/");
+      return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${encoded}`;
+    }
+
+    function parseCardMarkdown(md) {
+      const sections = {};
+      let current = null;
+      let buffer = [];
+
+      const flush = () => {
+        if (current !== null) {
+          sections[current] = buffer.join("\n").trim();
+        }
+        buffer = [];
+      };
+
+      md.split(/\r?\n/).forEach(line => {
+        const heading = line.match(/^#{1,6}\s+(.+?)\s*$/);
+        if (heading) {
+          flush();
+          current = heading[1].trim().toLowerCase();
+        } else if (current !== null) {
+          buffer.push(line);
+        }
+      });
+      flush();
+
+      return sections;
+    }
+
+    function prettify(value) {
+      return String(value)
+        .replace(/[-_]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/\b\w/g, ch => ch.toUpperCase());
+    }
+
+    function collectCards(tree, owner, repo, branch) {
+      const prefix = CONFIG.cardsDir + "/";
+      const blobs = tree.filter(e => e.type === "blob" && e.path.startsWith(prefix));
+      const fileSet = new Set(blobs.map(b => b.path));
+
+      const cardDirs = new Set();
+      blobs.forEach(b => {
+        if (b.path.toLowerCase().endsWith("/index.md")) {
+          cardDirs.add(b.path.slice(0, -"/index.md".length));
+        }
+      });
+
+      const cards = [];
+      cardDirs.forEach(dir => {
+        const segments = dir.split("/");
+        const category = segments[1] || "other";
+        const project = segments[segments.length - 1];
+
+        let imgPath = null;
+        for (const ext of IMG_EXTENSIONS) {
+          const candidate = `${dir}/index.${ext}`;
+          if (fileSet.has(candidate)) {
+            imgPath = candidate;
+            break;
+          }
+        }
+
+        cards.push({
+          dir,
+          category,
+          project,
+          mdUrl: rawUrl(owner, repo, branch, `${dir}/index.md`),
+          imgUrl: imgPath ? rawUrl(owner, repo, branch, imgPath) : null
+        });
+      });
+
+      cards.sort((a, b) => a.dir.localeCompare(b.dir, "ru"));
+      return cards;
+    }
+
+    async function buildItem(card) {
+      try {
+        const response = await fetch(card.mdUrl, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status);
+        }
+        const sections = parseCardMarkdown(await response.text());
+
+        return {
+          title: sections.title || prettify(card.project),
+          text: sections.text || sections.description || sections.about || "",
+          url: sections.url || "",
+          img: card.imgUrl,
+          category: card.category
+        };
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function buildCategoryMap(items) {
+      const map = {};
+      items.forEach(item => {
+        if (item.category) {
+          map[item.category] = prettify(item.category);
+        }
+      });
+      return map;
+    }
+
+    function getItemCategories(item) {
+      if (typeof item.category === "string" && item.category.trim()) {
+        return [item.category.trim()];
+      }
+      return [];
+    }
+
+    function collectUsedCategories(items, categoryMap) {
+      const used = new Set();
+      items.forEach(item => {
+        getItemCategories(item).forEach(code => {
+          if (categoryMap[code]) {
+            used.add(code);
+          }
+        });
+      });
+      return Array.from(used).sort((a, b) => a.localeCompare(b, "ru"));
+    }
+
+    function createButton(href) {
+      const a = document.createElement("a");
+      a.href = href;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.className = "btn btn-secondary";
+      a.textContent = "Открыть";
+      return a;
+    }
+
+    function createCard(item) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "af-masonry-item";
+
+      const card = document.createElement("div");
+      card.className = "card af-card text-bg-primary border-0 shadow";
+
+      if (item.img) {
+        const img = document.createElement("img");
+        img.src = item.img;
+        img.alt = item.title || "card image";
+        img.loading = "lazy";
+        img.addEventListener("error", () => img.remove());
+        card.appendChild(img);
+      }
+
+      const body = document.createElement("div");
+      body.className = "card-body";
+
+      if (item.title) {
+        const title = document.createElement("h5");
+        title.className = "card-title";
+        title.textContent = item.title;
+        body.appendChild(title);
+      }
+
+      if (item.text) {
+        const text = document.createElement("p");
+        text.className = "card-text";
+        text.textContent = item.text;
+        body.appendChild(text);
+      }
+
+      if (item.url) {
+        const btnRow = document.createElement("div");
+        btnRow.className = "af-btn-row";
+        btnRow.appendChild(createButton(item.url));
+        body.appendChild(btnRow);
+      }
+
+      card.appendChild(body);
+      wrapper.appendChild(card);
+      return wrapper;
+    }
+
+    function renderNavbarCategories() {
+      const nav = document.getElementById("categoryNav");
+      nav.innerHTML = "";
+
+      const makeLink = (code, label) => {
+        const li = document.createElement("li");
+        li.className = "nav-item";
+
+        const a = document.createElement("a");
+        a.href = "#";
+        a.dataset.category = code;
+        a.className = state.activeCategory === code ? "nav-link active" : "nav-link";
+        a.textContent = label;
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          state.activeCategory = code;
+          renderNavbarCategories();
+          renderCards();
+        });
+
+        li.appendChild(a);
+        nav.appendChild(li);
+      };
+
+      makeLink("all", "Все");
+      collectUsedCategories(state.items, state.categoryMap).forEach(code => {
+        makeLink(code, state.categoryMap[code]);
+      });
+    }
+
+    function renderCards() {
+      const container = document.getElementById("cards");
+      container.innerHTML = "";
+
+      const filtered = state.activeCategory === "all"
+        ? state.items
+        : state.items.filter(item => getItemCategories(item).includes(state.activeCategory));
+
+      if (!filtered.length) {
+        const empty = document.createElement("div");
+        empty.className = "alert alert-dark";
+        empty.textContent = "В этой категории пока нет карточек.";
+        container.appendChild(empty);
+        return;
+      }
+
+      filtered.forEach(item => container.appendChild(createCard(item)));
+    }
+
+    function showError(message) {
+      const container = document.getElementById("cards");
+      container.innerHTML = `
+        <div class="alert alert-danger">
+          Не удалось загрузить карточки.<br>
+          <small>${String(message)}</small>
+        </div>
+      `;
+    }
+
+    async function loadCards() {
+      const { owner, repo, branch } = detectRepo();
+
+      if (!owner || !repo) {
+        showError("Не удалось определить репозиторий. Заполните CONFIG.owner и CONFIG.repo в index.html.");
+        return;
+      }
+
+      const treeUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
+
+      try {
+        const response = await fetch(treeUrl, {
+          headers: { Accept: "application/vnd.github+json" }
+        });
+
+        if (response.status === 403) {
+          throw new Error("Превышен лимит запросов к GitHub API. Попробуйте позже.");
+        }
+        if (!response.ok) {
+          throw new Error("GitHub API: HTTP " + response.status + " " + response.statusText);
+        }
+
+        const data = await response.json();
+        const tree = Array.isArray(data.tree) ? data.tree : [];
+
+        const cards = collectCards(tree, owner, repo, branch);
+        const items = (await Promise.all(cards.map(buildItem))).filter(Boolean);
+
+        state.items = items;
+        state.categoryMap = buildCategoryMap(items);
+
+        renderNavbarCategories();
+        renderCards();
+      } catch (err) {
+        showError(err.message || err);
+      }
+    }
+
+    document.addEventListener("click", (e) => {
+      const brand = e.target.closest(".navbar-brand[data-category='all']");
+      if (!brand) return;
+      e.preventDefault();
+      state.activeCategory = "all";
+      renderNavbarCategories();
+      renderCards();
+    });
+
+    loadCards();
+  </script>
+</body>
+
+</html>
