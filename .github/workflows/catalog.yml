@@ -1,0 +1,47 @@
+name: "Catalog"
+run-name: "Catalog ${{ github.ref_name }}"
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-catalog:
+    name: Generate cards from submodules
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check GitHub status
+        run: |
+          indicator=$(curl -sf https://www.githubstatus.com/api/v2/status.json | python3 -c "import sys, json; print(json.load(sys.stdin)['status']['indicator'])")
+          echo "GitHub status: $indicator"
+          if [ "$indicator" = "major" ] || [ "$indicator" = "critical" ]; then
+            echo "GitHub is having an outage, aborting."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Generate cards
+        run: python3 .github/scripts/build_cards.py
+
+      - name: Commit cards
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cards
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: update cards catalog [skip ci]"
+            git push origin HEAD:main
+          fi
